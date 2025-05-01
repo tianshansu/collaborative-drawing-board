@@ -1,6 +1,5 @@
 package client;
 
-import common.ClientInterface;
 import common.ServerInterface;
 import common.UIUtils;
 import constants.ClientConstants;

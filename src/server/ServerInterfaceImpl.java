@@ -19,21 +19,21 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
     private final Map<String, ClientInterface> connectedClients = new HashMap<>();
 
 
-    /**
-     * Get current connected users list
-     * @return connectedClients map
-     */
-    public Map<String, ClientInterface> getConnectedUserMap() {
-        return connectedClients;
-    }
-
-    /**
-     * Get all current usernames
-     * @return current username list
-     */
-    public List<String> getCurrentUsernames() {
-        return currentUsernames;
-    }
+//    /**
+//     * Get current connected users list
+//     * @return connectedClients map
+//     */
+//    public Map<String, ClientInterface> getConnectedUserMap() {
+//        return connectedClients;
+//    }
+//
+//    /**
+//     * Get all current usernames
+//     * @return current username list
+//     */
+//    public List<String> getCurrentUsernames() {
+//        return currentUsernames;
+//    }
 
 
     /**
