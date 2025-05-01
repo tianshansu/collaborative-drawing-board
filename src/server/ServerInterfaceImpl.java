@@ -18,24 +18,6 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
     private final List<String> currentUsernames=new ArrayList<>();
     private final Map<String, ClientInterface> connectedClients = new HashMap<>();
 
-
-//    /**
-//     * Get current connected users list
-//     * @return connectedClients map
-//     */
-//    public Map<String, ClientInterface> getConnectedUserMap() {
-//        return connectedClients;
-//    }
-//
-//    /**
-//     * Get all current usernames
-//     * @return current username list
-//     */
-//    public List<String> getCurrentUsernames() {
-//        return currentUsernames;
-//    }
-
-
     /**
      * Constructor
      * @param serverUI serverUI
@@ -45,8 +27,11 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         super();
         this.serverUI = serverUI;
         this.username = username;
+        serverUI.setServer(this);
         currentUsernames.add(username); //add the manager's username to username list
-        serverUI.addUser(currentUsernames);
+        serverUI.updateUserList(currentUsernames);
+
+
     }
 
 
@@ -61,12 +46,7 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         //add the new client's name and ref to the map and list
         connectedClients.put(username,client);
         currentUsernames.add(username);
-        serverUI.addUser(currentUsernames);
-
-        //update the user list for all clients
-        for (ClientInterface c : connectedClients.values()) {
-            c.updateUserList(currentUsernames);
-        }
+        updateUserListForAllUsers(currentUsernames);
     }
 
     /**
@@ -93,6 +73,38 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
             throw new RuntimeException(e);
         }
         return allowJoin[0] == JOptionPane.YES_OPTION;
+    }
+
+    /**
+     * Disconnect the user
+     * @param username user's username
+     * @throws RemoteException RemoteException
+     */
+    @Override
+    public void userDisconnect(String username) throws RemoteException {
+        currentUsernames.remove(username);
+        connectedClients.remove(username);
+        updateUserListForAllUsers(currentUsernames);
+
+    }
+
+    /**
+     * notify all current users when the manager is offline
+     * @throws RemoteException RemoteException
+     */
+    public void notifyClientsWhenOffline() throws RemoteException {
+        for (ClientInterface client : connectedClients.values()) {
+            client.getNotifiedWhenManagerDisconnected();
+        }
+    }
+
+
+    private void updateUserListForAllUsers(List<String> usernames) throws RemoteException {
+        serverUI.updateUserList(currentUsernames);
+        //update the user list for all clients
+        for (ClientInterface client : connectedClients.values()) {
+            client.updateUserList(currentUsernames);
+        }
     }
 }
 

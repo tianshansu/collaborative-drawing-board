@@ -5,8 +5,13 @@ import java.rmi.RemoteException;
 
 public interface ServerInterface extends Remote {
 
+    /**
+     * Register the new client in server for future remote function invocation
+     * @param username client's username
+     * @param client the client obj
+     * @throws RemoteException RemoteException
+     */
     void registerClient(String username, ClientInterface client) throws RemoteException;
-
 
 
     /**
@@ -16,4 +21,17 @@ public interface ServerInterface extends Remote {
      * @throws RemoteException RemoteException
      */
     boolean requestJoin(String username) throws RemoteException;
+
+    /**
+     * Disconnect the user
+     * @param username user's username
+     * @throws RemoteException RemoteException
+     */
+    void userDisconnect(String username) throws RemoteException;
+
+    /**
+     * Notify all clients when offline
+     * @throws RemoteException RemoteException
+     */
+    void notifyClientsWhenOffline() throws RemoteException;
 }

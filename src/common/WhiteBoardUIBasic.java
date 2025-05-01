@@ -12,7 +12,6 @@ public class WhiteBoardUIBasic extends JFrame {
      * Constructor
      */
     public WhiteBoardUIBasic() {
-        setTitle("Shared Whiteboard - Manager");
         setSize(1200, 800);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -56,7 +55,11 @@ public class WhiteBoardUIBasic extends JFrame {
         setVisible(true);
     }
 
-    public void addUser(List<String> userList) {
+    /**
+     * Update the user list on UI
+     * @param userList new username list
+     */
+    public void updateUserList(List<String> userList) {
         userListModel.clear();
         for (String name : userList) {
             userListModel.addElement(name);
