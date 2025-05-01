@@ -14,8 +14,6 @@ import java.util.List;
 public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientInterface {
     String username;
     ClientUI clientUI;
-    String serverIP;
-    int serverPort;
 
     /**
      * Constructor

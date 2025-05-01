@@ -29,9 +29,5 @@ public interface ServerInterface extends Remote {
      */
     void userDisconnect(String username) throws RemoteException;
 
-    /**
-     * Notify all clients when offline
-     * @throws RemoteException RemoteException
-     */
-    void notifyClientsWhenOffline() throws RemoteException;
+
 }

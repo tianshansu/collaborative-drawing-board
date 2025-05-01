@@ -2,7 +2,6 @@ package client;
 
 import common.ServerInterface;
 import common.WhiteBoardUIBasic;
-import server.ServerInterfaceImpl;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;

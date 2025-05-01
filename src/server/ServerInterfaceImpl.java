@@ -46,7 +46,7 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         //add the new client's name and ref to the map and list
         connectedClients.put(username,client);
         currentUsernames.add(username);
-        updateUserListForAllUsers(currentUsernames);
+        updateUserListForAllUsers();
     }
 
     /**
@@ -84,7 +84,7 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
     public void userDisconnect(String username) throws RemoteException {
         currentUsernames.remove(username);
         connectedClients.remove(username);
-        updateUserListForAllUsers(currentUsernames);
+        updateUserListForAllUsers();
 
     }
 
@@ -99,7 +99,7 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
     }
 
 
-    private void updateUserListForAllUsers(List<String> usernames) throws RemoteException {
+    private void updateUserListForAllUsers() throws RemoteException {
         serverUI.updateUserList(currentUsernames);
         //update the user list for all clients
         for (ClientInterface client : connectedClients.values()) {

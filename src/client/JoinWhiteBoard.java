@@ -56,8 +56,6 @@ public class JoinWhiteBoard {
             }
         } catch (NotBoundException | MalformedURLException | RemoteException e) {
             System.out.println(e.getMessage());
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
         }
     }
 

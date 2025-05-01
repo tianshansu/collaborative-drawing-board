@@ -5,4 +5,8 @@ public class MessageConstants {
     public static final String PORT_NUMBER_INCORRECT_FORMAT="The port number is in incorrect format";
     public static final String PORT_OUT_OF_RANGE="The port number is out of range";
 
+    public static final String DIALOG_TEXT_ERROR="Error";
+    public static final String DIALOG_TEXT_MANAGER_OFFLINE="Manager offline";
+
+
 }

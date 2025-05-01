@@ -12,4 +12,10 @@ public interface ClientInterface extends Remote {
      * @throws RemoteException RemoteException
      */
     void updateUserList(List<String> userList) throws RemoteException;
+
+    /**
+     * Get the dialog when the manager is offline
+     * @throws RemoteException RemoteException
+     */
+    void getNotifiedWhenManagerDisconnected() throws RemoteException;
 }

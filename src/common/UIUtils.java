@@ -1,5 +1,7 @@
 package common;
 
+import constants.MessageConstants;
+
 import javax.swing.*;
 
 public class UIUtils {
@@ -13,7 +15,7 @@ public class UIUtils {
         JOptionPane.showMessageDialog(
                 jFrame,
                 msg,
-                "Error",
+                MessageConstants.DIALOG_TEXT_ERROR,
                 JOptionPane.ERROR_MESSAGE
         );
         System.exit(0);
