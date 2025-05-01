@@ -5,6 +5,10 @@ import java.rmi.RemoteException;
 
 public interface ServerInterface extends Remote {
 
+    void registerClient(String username, ClientInterface client) throws RemoteException;
+
+
+
     /**
      * Client request to join the server
      * @param username client's username

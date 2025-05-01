@@ -1,13 +1,13 @@
-package server;
+package client;
 
 import common.WhiteBoardUIBasic;
 
-public class ServerUI extends WhiteBoardUIBasic {
+public class ClientUI extends WhiteBoardUIBasic {
 
     /**
      * Constructor
      */
-    public ServerUI() {
+    public ClientUI() {
         super();
     }
 }
