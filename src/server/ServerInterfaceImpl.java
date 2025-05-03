@@ -1,7 +1,7 @@
 package server;
 
-import common.ClientInterface;
-import common.ServerInterface;
+import common.interfaces.ClientInterface;
+import common.interfaces.ServerInterface;
 
 import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;

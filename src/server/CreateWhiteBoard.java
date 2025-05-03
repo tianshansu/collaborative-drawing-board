@@ -1,6 +1,6 @@
 package server;
 
-import common.ServerInterface;
+import common.interfaces.ServerInterface;
 import common.UIUtils;
 import constants.MessageConstants;
 import constants.ServerConstants;

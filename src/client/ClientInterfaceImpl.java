@@ -1,6 +1,6 @@
 package client;
 
-import common.ClientInterface;
+import common.interfaces.ClientInterface;
 import constants.ClientConstants;
 
 import constants.MessageConstants;
