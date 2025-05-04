@@ -14,6 +14,8 @@ public class ServerUI extends WhiteBoardUIBasic {
         this.server = server;
     }
 
+
+
     /**
      * Constructor
      */

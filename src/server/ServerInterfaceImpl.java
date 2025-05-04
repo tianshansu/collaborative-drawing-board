@@ -1,5 +1,6 @@
 package server;
 
+import common.ShapesDrawn;
 import common.interfaces.ClientInterface;
 import common.interfaces.ServerInterface;
 
@@ -17,6 +18,8 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
     String username;
     private final List<String> currentUsernames=new ArrayList<>();
     private final Map<String, ClientInterface> connectedClients = new HashMap<>();
+    private List<ShapesDrawn> shapesDrawnList = new ArrayList<>(); //store all shapes on canvas
+
 
     /**
      * Constructor
@@ -28,10 +31,7 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         this.serverUI = serverUI;
         this.username = username;
         serverUI.setServer(this);
-        currentUsernames.add(username); //add the manager's username to username list
-        serverUI.updateUserList(currentUsernames);
-
-
+        //serverUI.updateUserList(currentUsernames);
     }
 
 
@@ -86,6 +86,19 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         connectedClients.remove(username);
         updateUserListForAllUsers();
 
+    }
+
+    /**
+     * Submit a new shape to server
+     * @param shape the new shape
+     * @throws RemoteException RemoteException
+     */
+    @Override
+    public void drawNewShape(ShapesDrawn shape) throws RemoteException {
+        shapesDrawnList.add(shape);
+        for (ClientInterface client : connectedClients.values()) {
+            client.updateCanvas(shapesDrawnList);
+        }
     }
 
     /**

@@ -1,5 +1,7 @@
 package client;
 
+import common.ShapesDrawn;
+import common.WhiteBoardUIBasic;
 import common.interfaces.ClientInterface;
 import constants.ClientConstants;
 
@@ -13,16 +15,16 @@ import java.util.List;
 
 public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientInterface {
     String username;
-    ClientUI clientUI;
+    WhiteBoardUIBasic ui;
 
     /**
      * Constructor
      *
-     * @param clientUI clientUI
+     * @param ui ui
      * @throws RemoteException RemoteException
      */
-    protected ClientInterfaceImpl(ClientUI clientUI, String username) throws RemoteException {
-        this.clientUI = clientUI;
+    public ClientInterfaceImpl(WhiteBoardUIBasic ui, String username) throws RemoteException {
+        this.ui = ui;
         this.username = username;
 
 
@@ -36,7 +38,7 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
      */
     @Override
     public void updateUserList(List<String> userList) throws RemoteException {
-        clientUI.updateUserList(userList);
+        ui.updateUserList(userList);
     }
 
     /**
@@ -48,7 +50,7 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
     public void getNotifiedWhenManagerDisconnected() throws RemoteException {
         new Thread(() -> {
             JOptionPane.showMessageDialog(
-                    clientUI,
+                    ui,
                     ClientConstants.MANAGER_DISCONNECTED,
                     MessageConstants.DIALOG_TEXT_MANAGER_OFFLINE,
                     JOptionPane.WARNING_MESSAGE
@@ -57,6 +59,13 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
         }).start();
     }
 
+    /**
+     * Update the client's canvas after the manager draws something
+     * @throws RemoteException RemoteException
+     */
+    public void updateCanvas(List<ShapesDrawn> shapesDrawnList) throws RemoteException {
+        ui.updateCanvas(shapesDrawnList);
+    }
 
 }
 

@@ -1,5 +1,7 @@
 package common.interfaces;
 
+import common.ShapesDrawn;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
@@ -18,4 +20,10 @@ public interface ClientInterface extends Remote {
      * @throws RemoteException RemoteException
      */
     void getNotifiedWhenManagerDisconnected() throws RemoteException;
+
+    /**
+     * Update the client's canvas after the manager draws something
+     * @throws RemoteException RemoteException
+     */
+    void updateCanvas(List<ShapesDrawn> shapesDrawnList) throws RemoteException;
 }

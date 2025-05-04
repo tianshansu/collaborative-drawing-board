@@ -50,7 +50,8 @@ public class JoinWhiteBoard {
                 //create the client UI and register in server
                 ClientUI clientUI=new ClientUI(whiteBoardServer,username);
                 ClientInterfaceImpl whiteBoardClient = new ClientInterfaceImpl(clientUI,username);
-                whiteBoardServer.registerClient(username,  whiteBoardClient);
+                whiteBoardServer.registerClient(username, whiteBoardClient);
+                clientUI.setServerInterface(whiteBoardServer);
             }else{
                 UIUtils.exitWithMsg(null,ClientConstants.JOIN_REQUEST_DECLINED);
             }

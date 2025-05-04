@@ -1,13 +1,23 @@
 package common;
 
+import common.interfaces.ServerInterface;
+import enums.Shape;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class WhiteBoardUIBasic extends JFrame {
     private final DefaultListModel<String> userListModel;
-
+    private Point startPt = null;
+    private Point endPt = null;
+    private Shape currentShape = null;
+    private ServerInterface serverInterface = null;
+    private List<ShapesDrawn> allShapes = new ArrayList<>();
 
     /**
      * Constructor
@@ -62,16 +72,32 @@ public class WhiteBoardUIBasic extends JFrame {
         //add the UI buttons to top tool panel
         //line
         JButton lineButton = createIconButton("/common/assets/line-resized.png");
+        lineButton.addActionListener(e -> {
+            currentShape = Shape.LINE;
+        });
         topToolPanel.add(lineButton);
+
         //triangle
         JButton triangleButton = createIconButton("/common/assets/triangle-resized.png");
+        triangleButton.addActionListener(e -> {
+            currentShape = Shape.TRIANGLE;
+        });
         topToolPanel.add(triangleButton);
+
         //oval
         JButton ovalButton = createIconButton("/common/assets/oval-resized.png");
+        ovalButton.addActionListener(e -> {
+            currentShape = Shape.OVAL;
+        });
         topToolPanel.add(ovalButton);
+
         //rect
         JButton rectButton = createIconButton("/common/assets/rect-resized.png");
+        rectButton.addActionListener(e -> {
+            currentShape = Shape.RECTANGLE;
+        });
         topToolPanel.add(rectButton);
+
         //free draw
         JButton freeDrawButton = createIconButton("/common/assets/free-resized.png");
         topToolPanel.add(freeDrawButton);
@@ -99,6 +125,7 @@ public class WhiteBoardUIBasic extends JFrame {
                 sizeButton.setContentAreaFilled(true);
                 sizeButton.setBackground(new Color(200, 200, 200));
             }
+
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 sizeButton.setContentAreaFilled(false);
@@ -112,17 +139,78 @@ public class WhiteBoardUIBasic extends JFrame {
 
 
         //create the main drawing canvas panel
-        JPanel drawingPanel = new JPanel();
+        JPanel drawingPanel = new JPanel() {
+            {
+                addMouseListener(new MouseAdapter() {
+                    public void mousePressed(MouseEvent e) {
+                        startPt = e.getPoint(); //record the location of start pt
+                    }
+
+                    public void mouseReleased(MouseEvent e) {
+                        endPt = e.getPoint(); //record the location of end pt
+                        repaint();
+                        System.out.println(serverInterface);
+                        if (startPt != null && endPt != null && currentShape != null && serverInterface!=null) {
+                            try {
+                                serverInterface.drawNewShape(new ShapesDrawn(currentShape, startPt, endPt)); //add this new line to the list
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }
+                    }
+                });
+            }
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D graphics2D = (Graphics2D) g;
+
+                //set pen size
+                graphics2D.setStroke(new BasicStroke(3));
+                //set pen colour
+                graphics2D.setColor(Color.BLACK);
+
+                //draw all existing shapes
+                for (ShapesDrawn shapesDrawn : allShapes) {
+                    switch (shapesDrawn.getShape()) {
+                        case LINE:
+                            graphics2D.drawLine(shapesDrawn.getStartPt().x,
+                                    shapesDrawn.getStartPt().y,
+                                    shapesDrawn.getEndPt().x,
+                                    shapesDrawn.getEndPt().y); // draw line
+                            break;
+                    }
+                }
+
+                //draw the new shapes
+                if (currentShape != null) {
+                    switch (currentShape) {
+                        case LINE:
+                            graphics2D.drawLine(startPt.x, startPt.y, endPt.x, endPt.y); // draw line
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        };
         drawingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         drawingPanel.setPreferredSize(new Dimension(900, 730));
         drawingPanel.setBackground(Color.WHITE);
         drawingPanel.setBorder(BorderFactory.createTitledBorder("Drawing Canvas"));
+
         //add the drawing panel to mainPanel
         mainPanel.add(drawingPanel, BorderLayout.CENTER);
 
+        //add the main panel to screen
         add(mainPanel, BorderLayout.WEST);
 
         setVisible(true);
+    }
+
+    public void setServerInterface(ServerInterface serverInterface) {
+        this.serverInterface = serverInterface;
     }
 
     /**
@@ -136,8 +224,13 @@ public class WhiteBoardUIBasic extends JFrame {
         }
     }
 
+    public void updateCanvas(List<ShapesDrawn> drawnList) {
+        allShapes.clear();
+        allShapes.addAll(drawnList);
+        repaint();
+    }
 
-    public static JButton createIconButton(String resourcePath) {
+    private static JButton createIconButton(String resourcePath) {
         ImageIcon img = new ImageIcon(Objects.requireNonNull(WhiteBoardUIBasic.class.getResource(resourcePath)));
         JButton button = new JButton(img);
         button.setBorderPainted(false);
@@ -152,6 +245,7 @@ public class WhiteBoardUIBasic extends JFrame {
                 button.setContentAreaFilled(true);
                 button.setBackground(new Color(200, 200, 200));
             }
+
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 button.setContentAreaFilled(false);
@@ -161,3 +255,5 @@ public class WhiteBoardUIBasic extends JFrame {
     }
 
 }
+
+

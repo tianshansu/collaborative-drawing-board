@@ -1,5 +1,7 @@
 package common.interfaces;
 
+import common.ShapesDrawn;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -29,5 +31,10 @@ public interface ServerInterface extends Remote {
      */
     void userDisconnect(String username) throws RemoteException;
 
-
+    /**
+     * Submit a new shape to server
+     * @param shape the new shape
+     * @throws RemoteException RemoteException
+     */
+    void drawNewShape(ShapesDrawn shape) throws RemoteException;
 }

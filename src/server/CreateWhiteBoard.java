@@ -1,6 +1,8 @@
 package server;
 
+import client.ClientInterfaceImpl;
 import common.interfaces.ServerInterface;
+import common.interfaces.ClientInterface;
 import common.UIUtils;
 import constants.MessageConstants;
 import constants.ServerConstants;
@@ -48,6 +50,10 @@ public class CreateWhiteBoard {
             ServerInterface whiteBoardServer = new ServerInterfaceImpl(serverUI, username);
             Naming.rebind("rmi://" + serverIp + ":" + serverPort + "/" + ServerConstants.SERVICE_NAME, whiteBoardServer);
             System.out.println("Whiteboard RMI Server is running...");
+
+            ClientInterface managerClientImpl = new ClientInterfaceImpl(serverUI, username);
+            serverUI.setServerInterface(whiteBoardServer);
+            whiteBoardServer.registerClient(username,managerClientImpl);
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
