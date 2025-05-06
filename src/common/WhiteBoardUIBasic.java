@@ -2,10 +2,12 @@ package common;
 
 import common.interfaces.ServerInterface;
 import enums.Shape;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,8 +18,11 @@ public class WhiteBoardUIBasic extends JFrame {
     private Point startPt = null;
     private Point endPt = null;
     private Shape currentShape = null;
+    private Color currentColor = Color.black;
+    private int penSize = 3;
     private ServerInterface serverInterface = null;
     private List<ShapesDrawn> allShapes = new ArrayList<>();
+    List<Point> freeDrawPoints = new ArrayList<>();
 
     /**
      * Constructor
@@ -100,9 +105,17 @@ public class WhiteBoardUIBasic extends JFrame {
 
         //free draw
         JButton freeDrawButton = createIconButton("/common/assets/free-resized.png");
+        freeDrawButton.addActionListener(e -> {
+            currentShape = Shape.FREE_DRAW;
+        });
         topToolPanel.add(freeDrawButton);
+
         //eraser
         JButton eraserButton = createIconButton("/common/assets/eraser-resized.png");
+        eraserButton.addActionListener(e -> {
+            currentShape = Shape.FREE_DRAW;
+            currentColor=Color.WHITE;
+        });
         topToolPanel.add(eraserButton);
 
         //colour
@@ -111,27 +124,28 @@ public class WhiteBoardUIBasic extends JFrame {
         colourButton.setPreferredSize(new Dimension(20, 20));
         colourButton.setOpaque(true);
         colourButton.setBorderPainted(false);
+        colourButton.addActionListener(e -> {
+            currentColor= JColorChooser.showDialog(null, "Choose a color", currentColor);
+            colourButton.setBackground(currentColor);
+        });
         topToolPanel.add(colourButton);
 
-        //size
-        JButton sizeButton = new JButton("Size");
-        sizeButton.setBorderPainted(false);
-        sizeButton.setContentAreaFilled(false);
-        sizeButton.setFocusPainted(false);
-        sizeButton.setOpaque(false);
-        sizeButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                sizeButton.setContentAreaFilled(true);
-                sizeButton.setBackground(new Color(200, 200, 200));
-            }
+        // pen size
+        JLabel sizeTextField = new JLabel("Size");
+        sizeTextField.setPreferredSize(new Dimension(30, 30));
+        sizeTextField.setBackground(Color.WHITE);
+        sizeTextField.setBorder(null);
+        topToolPanel.add(sizeTextField);
 
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                sizeButton.setContentAreaFilled(false);
-            }
+
+        //pen size slider
+        JSlider penSizeSlider = new JSlider(JSlider.HORIZONTAL, 1, 20, penSize);
+        penSizeSlider.setPreferredSize(new Dimension(150, 40));
+        penSizeSlider.setBackground(Color.WHITE);
+        penSizeSlider.addChangeListener(e -> {
+            penSize = penSizeSlider.getValue();
         });
-        topToolPanel.add(sizeButton);
+        topToolPanel.add(penSizeSlider);
 
 
         //add the top tool panel to mainPanel
@@ -143,19 +157,51 @@ public class WhiteBoardUIBasic extends JFrame {
             {
                 addMouseListener(new MouseAdapter() {
                     public void mousePressed(MouseEvent e) {
+                        if (currentShape == Shape.FREE_DRAW) {
+                            freeDrawPoints.clear();
+                            freeDrawPoints.add(e.getPoint());
+                            repaint();
+                            return;
+                        }
+
                         startPt = e.getPoint(); //record the location of start pt
+
                     }
 
                     public void mouseReleased(MouseEvent e) {
-                        endPt = e.getPoint(); //record the location of end pt
-                        repaint();
-                        System.out.println(serverInterface);
-                        if (startPt != null && endPt != null && currentShape != null && serverInterface!=null) {
+                        if (currentShape == Shape.FREE_DRAW) {
+                            freeDrawPoints.add(e.getPoint());
                             try {
-                                serverInterface.drawNewShape(new ShapesDrawn(currentShape, startPt, endPt)); //add this new line to the list
+                                //add the free draw line to list in server
+                                ShapesDrawn shape = new ShapesDrawn(currentShape, new ArrayList<>(freeDrawPoints),currentColor,penSize);
+                                serverInterface.drawNewShape(shape);
                             } catch (RemoteException ex) {
                                 throw new RuntimeException(ex);
                             }
+                            repaint();
+                            return;
+                        }
+
+                        endPt = e.getPoint(); //record the location of end pt
+
+                        repaint();
+                        System.out.println(serverInterface);
+                        if (startPt != null && endPt != null && currentShape != null && serverInterface != null) {
+                            try {
+                                serverInterface.drawNewShape(new ShapesDrawn(currentShape, startPt, endPt,currentColor,penSize)); //add this new line to the list
+                            } catch (RemoteException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }
+                    }
+                });
+
+                addMouseMotionListener(new MouseMotionAdapter() {
+                    @Override
+                    public void mouseDragged(MouseEvent e) {
+                        if (currentShape == Shape.FREE_DRAW) {
+                            freeDrawPoints.add(e.getPoint());
+                            repaint();
                         }
                     }
                 });
@@ -166,28 +212,51 @@ public class WhiteBoardUIBasic extends JFrame {
                 super.paintComponent(g);
                 Graphics2D graphics2D = (Graphics2D) g;
 
-                //set pen size
-                graphics2D.setStroke(new BasicStroke(3));
-                //set pen colour
-                graphics2D.setColor(Color.BLACK);
-
                 //draw all existing shapes
                 for (ShapesDrawn shapesDrawn : allShapes) {
+
+                    graphics2D.setStroke(new BasicStroke(shapesDrawn.getPenSize()));
+                    graphics2D.setColor(shapesDrawn.getColor());
                     switch (shapesDrawn.getShape()) {
                         case LINE:
-                            graphics2D.drawLine(shapesDrawn.getStartPt().x,
-                                    shapesDrawn.getStartPt().y,
-                                    shapesDrawn.getEndPt().x,
-                                    shapesDrawn.getEndPt().y); // draw line
+                            drawLine(graphics2D, shapesDrawn.getStartPt(), shapesDrawn.getEndPt());// draw line
+                            break;
+                        case TRIANGLE:
+                            drawTriangle(graphics2D, shapesDrawn.getStartPt(), shapesDrawn.getEndPt());//draw triangle
+                            break;
+                        case OVAL:
+                            drawOval(graphics2D, shapesDrawn.getStartPt(), shapesDrawn.getEndPt());//draw oval
+                            break;
+                        case RECTANGLE:
+                            drawRect(graphics2D, shapesDrawn.getStartPt(), shapesDrawn.getEndPt());//draw rectangle
+                            break;
+                        case FREE_DRAW:
+                            freeDraw(graphics2D,shapesDrawn.getPoints());//free draw lines
+                            break;
+                        default:
                             break;
                     }
                 }
 
                 //draw the new shapes
                 if (currentShape != null) {
+                    graphics2D.setStroke(new BasicStroke(penSize));
+                    graphics2D.setColor(currentColor);
                     switch (currentShape) {
                         case LINE:
-                            graphics2D.drawLine(startPt.x, startPt.y, endPt.x, endPt.y); // draw line
+                            drawLine(graphics2D, startPt, endPt); // draw line
+                            break;
+                        case TRIANGLE:
+                            drawTriangle(graphics2D, startPt, endPt);//draw triangle
+                            break;
+                        case OVAL:
+                            drawOval(graphics2D, startPt, endPt);//draw oval
+                            break;
+                        case RECTANGLE:
+                            drawRect(graphics2D, startPt, endPt);//draw rectangle
+                            break;
+                        case FREE_DRAW:
+                            freeDraw(graphics2D,freeDrawPoints);//free draw
                             break;
                         default:
                             break;
@@ -215,6 +284,7 @@ public class WhiteBoardUIBasic extends JFrame {
 
     /**
      * Update the user list on UI
+     *
      * @param userList new username list
      */
     public void updateUserList(List<String> userList) {
@@ -254,6 +324,43 @@ public class WhiteBoardUIBasic extends JFrame {
         return button;
     }
 
+    private void drawLine(Graphics2D graphics2D, Point startPt, Point endPt) {
+        graphics2D.drawLine(startPt.x, startPt.y, endPt.x, endPt.y);
+    }
+
+    private void drawTriangle(Graphics2D graphics2D, Point startPt, Point endPt) {
+        Point p1 = new Point((startPt.x + endPt.x) / 2, startPt.y);
+        Point p2 = new Point(startPt.x, endPt.y);
+        Point p3 = new Point(endPt.x, endPt.y);
+        int[] xPoints = {p1.x, p2.x, p3.x};
+        int[] yPoints = {p1.y, p2.y, p3.y};
+        graphics2D.drawPolygon(xPoints, yPoints, 3);
+    }
+
+    private void drawOval(Graphics2D graphics2D, Point startPt, Point endPt) {
+        int x = Math.min(startPt.x, endPt.x);
+        int y = Math.min(startPt.y, endPt.y);
+        int width = Math.abs(endPt.x - startPt.x);
+        int height = Math.abs(endPt.y - startPt.y);
+        graphics2D.drawOval(x, y, width, height);
+    }
+
+    private void drawRect(Graphics2D graphics2D, Point startPt, Point endPt) {
+        int x = Math.min(startPt.x, endPt.x);
+        int y = Math.min(startPt.y, endPt.y);
+        int width = Math.abs(endPt.x - startPt.x);
+        int height = Math.abs(endPt.y - startPt.y);
+
+        graphics2D.drawRect(x, y, width, height);
+    }
+
+    private void freeDraw(Graphics2D graphics2D,List<Point> freeDrawPoints) {
+        for (int i = 1; i < freeDrawPoints.size(); i++) {
+            Point p1 = freeDrawPoints.get(i - 1);
+            Point p2 = freeDrawPoints.get(i);
+            graphics2D.drawLine(p1.x, p1.y, p2.x, p2.y);
+        }
+    }
 }
 
 

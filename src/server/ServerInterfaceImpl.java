@@ -47,6 +47,7 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         connectedClients.put(username,client);
         currentUsernames.add(username);
         updateUserListForAllUsers();
+        connectedClients.get(username).updateCanvas(shapesDrawnList);//update the new client's canvas
     }
 
     /**
