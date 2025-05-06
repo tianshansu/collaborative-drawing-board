@@ -5,5 +5,6 @@ public enum Shape {
     TRIANGLE,
     OVAL,
     RECTANGLE,
-    FREE_DRAW
+    FREE_DRAW,
+    TEXT
 }

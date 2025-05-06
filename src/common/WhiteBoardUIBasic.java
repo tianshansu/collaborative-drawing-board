@@ -5,9 +5,7 @@ import enums.Shape;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
+import java.awt.event.*;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,14 +13,16 @@ import java.util.Objects;
 
 public class WhiteBoardUIBasic extends JFrame {
     private final DefaultListModel<String> userListModel;
-    private Point startPt = null;
-    private Point endPt = null;
-    private Shape currentShape = null;
+    private Point startPt;
+    private Point endPt;
+    private Shape currentShape;
     private Color currentColor = Color.black;
+    private Font currentFont;
     private int penSize = 3;
-    private ServerInterface serverInterface = null;
+    private ServerInterface serverInterface;
     private List<ShapesDrawn> allShapes = new ArrayList<>();
-    List<Point> freeDrawPoints = new ArrayList<>();
+    private List<Point> freeDrawPoints = new ArrayList<>();
+    private JPanel drawingPanel;
 
     /**
      * Constructor
@@ -110,11 +110,20 @@ public class WhiteBoardUIBasic extends JFrame {
         });
         topToolPanel.add(freeDrawButton);
 
+        //text input
+        JButton textButton = createIconButton("/common/assets/text-resized.png");
+        textButton.addActionListener(e -> {
+            currentShape = Shape.TEXT;
+        });
+
+
+        topToolPanel.add(textButton);
+
         //eraser
         JButton eraserButton = createIconButton("/common/assets/eraser-resized.png");
         eraserButton.addActionListener(e -> {
             currentShape = Shape.FREE_DRAW;
-            currentColor=Color.WHITE;
+            currentColor = Color.WHITE;
         });
         topToolPanel.add(eraserButton);
 
@@ -125,7 +134,7 @@ public class WhiteBoardUIBasic extends JFrame {
         colourButton.setOpaque(true);
         colourButton.setBorderPainted(false);
         colourButton.addActionListener(e -> {
-            currentColor= JColorChooser.showDialog(null, "Choose a color", currentColor);
+            currentColor = JColorChooser.showDialog(null, "Choose a color", currentColor);
             colourButton.setBackground(currentColor);
         });
         topToolPanel.add(colourButton);
@@ -153,10 +162,11 @@ public class WhiteBoardUIBasic extends JFrame {
 
 
         //create the main drawing canvas panel
-        JPanel drawingPanel = new JPanel() {
+        drawingPanel = new JPanel() {
             {
                 addMouseListener(new MouseAdapter() {
                     public void mousePressed(MouseEvent e) {
+                        // free draw
                         if (currentShape == Shape.FREE_DRAW) {
                             freeDrawPoints.clear();
                             freeDrawPoints.add(e.getPoint());
@@ -164,16 +174,53 @@ public class WhiteBoardUIBasic extends JFrame {
                             return;
                         }
 
+                        //input text
+                        if (currentShape == Shape.TEXT) {
+                            Point clickPoint = e.getPoint();//get the text location
+                            drawingPanel.setLayout(null);
+                            JTextField textField = new JTextField();
+                            textField.setOpaque(false);
+                            textField.setBorder(null);
+                            textField.setBounds(clickPoint.x, clickPoint.y, 300, 60);
+                            currentFont=new Font("Arial", Font.PLAIN, penSize + 20);
+                            textField.setFont(currentFont);
+                            textField.setForeground(currentColor); //set text colour
+
+                            textField.addFocusListener(new FocusAdapter() {
+                                //remove the text field once the user clicks somewhere else
+                                @Override
+                                public void focusLost(FocusEvent e) {
+                                    //add this text in the list in server
+                                    try {
+                                        ShapesDrawn shape=new ShapesDrawn(currentShape, clickPoint, currentColor, textField.getText(),currentFont);
+                                        allShapes.add(shape);
+                                        serverInterface.drawNewShape(shape);
+                                        textField.setText("");
+                                    } catch (RemoteException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
+                                    drawingPanel.remove(textField);
+
+                                    drawingPanel.revalidate();
+                                    drawingPanel.repaint();
+                                }
+                            });
+                            drawingPanel.add(textField);
+                            drawingPanel.revalidate();
+                            drawingPanel.repaint();
+                        }
+
                         startPt = e.getPoint(); //record the location of start pt
 
                     }
+
 
                     public void mouseReleased(MouseEvent e) {
                         if (currentShape == Shape.FREE_DRAW) {
                             freeDrawPoints.add(e.getPoint());
                             try {
                                 //add the free draw line to list in server
-                                ShapesDrawn shape = new ShapesDrawn(currentShape, new ArrayList<>(freeDrawPoints),currentColor,penSize);
+                                ShapesDrawn shape = new ShapesDrawn(currentShape, new ArrayList<>(freeDrawPoints), currentColor, penSize);
                                 serverInterface.drawNewShape(shape);
                             } catch (RemoteException ex) {
                                 throw new RuntimeException(ex);
@@ -185,10 +232,10 @@ public class WhiteBoardUIBasic extends JFrame {
                         endPt = e.getPoint(); //record the location of end pt
 
                         repaint();
-                        System.out.println(serverInterface);
                         if (startPt != null && endPt != null && currentShape != null && serverInterface != null) {
                             try {
-                                serverInterface.drawNewShape(new ShapesDrawn(currentShape, startPt, endPt,currentColor,penSize)); //add this new line to the list
+                                ShapesDrawn shape =new ShapesDrawn(currentShape, startPt, endPt, currentColor, penSize);
+                                serverInterface.drawNewShape(shape); //add this new line to the list
                             } catch (RemoteException ex) {
                                 throw new RuntimeException(ex);
                             }
@@ -231,7 +278,13 @@ public class WhiteBoardUIBasic extends JFrame {
                             drawRect(graphics2D, shapesDrawn.getStartPt(), shapesDrawn.getEndPt());//draw rectangle
                             break;
                         case FREE_DRAW:
-                            freeDraw(graphics2D,shapesDrawn.getPoints());//free draw lines
+                            freeDraw(graphics2D, shapesDrawn.getPoints());//free draw lines
+                            break;
+                        case TEXT:
+                            //System.out.println("text");
+                            graphics2D.setColor(shapesDrawn.getColor());
+                            graphics2D.setFont(shapesDrawn.getFont());
+                            graphics2D.drawString(shapesDrawn.getText(), shapesDrawn.getStartPt().x, shapesDrawn.getStartPt().y+40);
                             break;
                         default:
                             break;
@@ -256,7 +309,7 @@ public class WhiteBoardUIBasic extends JFrame {
                             drawRect(graphics2D, startPt, endPt);//draw rectangle
                             break;
                         case FREE_DRAW:
-                            freeDraw(graphics2D,freeDrawPoints);//free draw
+                            freeDraw(graphics2D, freeDrawPoints);//free draw
                             break;
                         default:
                             break;
@@ -354,7 +407,7 @@ public class WhiteBoardUIBasic extends JFrame {
         graphics2D.drawRect(x, y, width, height);
     }
 
-    private void freeDraw(Graphics2D graphics2D,List<Point> freeDrawPoints) {
+    private void freeDraw(Graphics2D graphics2D, List<Point> freeDrawPoints) {
         for (int i = 1; i < freeDrawPoints.size(); i++) {
             Point p1 = freeDrawPoints.get(i - 1);
             Point p2 = freeDrawPoints.get(i);
