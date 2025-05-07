@@ -31,7 +31,7 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         this.serverUI = serverUI;
         this.username = username;
         serverUI.setServer(this);
-        //serverUI.updateUserList(currentUsernames);
+        serverUI.setCurrentUserName(username);
     }
 
 
@@ -99,6 +99,13 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         shapesDrawnList.add(shape);
         for (ClientInterface client : connectedClients.values()) {
             client.updateCanvas(shapesDrawnList);
+        }
+    }
+
+    @Override
+    public void sendNewChatMsg(String username, String msg) throws RemoteException {
+        for (ClientInterface client : connectedClients.values()) {
+            client.updateChatMsg(username,msg);
         }
     }
 

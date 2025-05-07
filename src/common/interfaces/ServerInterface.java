@@ -4,6 +4,7 @@ import common.ShapesDrawn;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.sql.Time;
 
 public interface ServerInterface extends Remote {
 
@@ -37,4 +38,6 @@ public interface ServerInterface extends Remote {
      * @throws RemoteException RemoteException
      */
     void drawNewShape(ShapesDrawn shape) throws RemoteException;
+
+    void sendNewChatMsg(String username, String msg) throws RemoteException;
 }

@@ -26,8 +26,7 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
     public ClientInterfaceImpl(WhiteBoardUIBasic ui, String username) throws RemoteException {
         this.ui = ui;
         this.username = username;
-
-
+        ui.setCurrentUserName(username);
     }
 
     /**
@@ -65,6 +64,17 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
      */
     public void updateCanvas(List<ShapesDrawn> shapesDrawnList) throws RemoteException {
         ui.updateCanvas(shapesDrawnList);
+    }
+
+    /**
+     * update client's UI to show new chat msg
+     * @param username username of that msg
+     * @param chatMsg the actual chat msg
+     * @throws RemoteException RemoteException
+     */
+    @Override
+    public void updateChatMsg(String username, String chatMsg) throws RemoteException {
+        ui.addNewChatMsg(username, chatMsg);
     }
 
 }

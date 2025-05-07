@@ -24,6 +24,8 @@ public class WhiteBoardUIBasic extends JFrame {
     private List<ShapesDrawn> allShapes = new ArrayList<>();
     private List<Point> freeDrawPoints = new ArrayList<>();
     private JPanel drawingPanel;
+    private JPanel msgPanel;
+    private String currentUserName;
 
     /**
      * Constructor
@@ -59,6 +61,43 @@ public class WhiteBoardUIBasic extends JFrame {
         chatPanel.setBackground(Color.WHITE);
         chatPanel.setPreferredSize(new Dimension(300, 600));
         chatPanel.setBorder(BorderFactory.createTitledBorder("Chat"));
+        chatPanel.setLayout(new BorderLayout());
+        //msg panel
+        msgPanel = new JPanel();
+        msgPanel.setBackground(Color.WHITE);
+        msgPanel.setLayout(new BoxLayout(msgPanel, BoxLayout.Y_AXIS));
+        JScrollPane msgScrollPane = new JScrollPane(msgPanel);
+        chatPanel.add(msgScrollPane, BorderLayout.CENTER);
+
+        //input panel
+        JPanel inputPanel = new JPanel();
+        inputPanel.setBackground(Color.WHITE);
+        inputPanel.setPreferredSize(new Dimension(300, 50));
+        inputPanel.setBorder(BorderFactory.createTitledBorder(""));
+        inputPanel.setLayout(new BorderLayout());
+        //input box
+        JTextArea inputArea = new JTextArea();
+        inputArea.setPreferredSize(new Dimension(280, 50));
+        inputArea.setBackground(Color.WHITE);
+        inputArea.setBorder(BorderFactory.createTitledBorder(""));
+        inputArea.setLineWrap(true);
+        inputArea.setWrapStyleWord(true);
+        inputPanel.add(inputArea, BorderLayout.CENTER);
+        //send msg button
+        JButton sendButton = new JButton("Send");
+        sendButton.addActionListener(e -> {
+            if (!inputArea.getText().isEmpty()) {
+                //send the msg to server and broadcast
+                try {
+                    serverInterface.sendNewChatMsg(currentUserName,inputArea.getText());
+                    inputArea.setText("");//clear the input box
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        inputPanel.add(sendButton, BorderLayout.EAST);
+        chatPanel.add(inputPanel, BorderLayout.SOUTH);
         rightPanel.add(chatPanel);
 
         //add the right panel to jFrame
@@ -337,13 +376,24 @@ public class WhiteBoardUIBasic extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * set server interface
+     * @param serverInterface serverInterface
+     */
     public void setServerInterface(ServerInterface serverInterface) {
         this.serverInterface = serverInterface;
     }
 
     /**
+     * set current user's usrename - to pass it to server during chatting
+     * @param currentUserName currentUserName
+     */
+    public void setCurrentUserName(String currentUserName) {
+        this.currentUserName = currentUserName;
+    }
+
+    /**
      * Update the user list on UI
-     *
      * @param userList new username list
      */
     public void updateUserList(List<String> userList) {
@@ -353,10 +403,38 @@ public class WhiteBoardUIBasic extends JFrame {
         }
     }
 
+    /**
+     * update the drawing canvas
+     * @param drawnList the shapes drawing history list
+     */
     public void updateCanvas(List<ShapesDrawn> drawnList) {
         allShapes.clear();
         allShapes.addAll(drawnList);
         repaint();
+    }
+
+    public void addNewChatMsg(String username, String chatMsg) {
+        JLabel msgLabel = new JLabel( "<html><body style='width:220px;'>" + chatMsg + "</body></html>");//auto change line
+        msgLabel.setFont(new Font("Arial", Font.PLAIN, 20));
+
+        JLabel usernameLabel = new JLabel(username);
+        usernameLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+
+        JPanel msgContainer = new JPanel();
+        msgContainer.setBackground(Color.WHITE);
+        msgContainer.setLayout(new BoxLayout(msgContainer, BoxLayout.Y_AXIS));
+        msgContainer.add(usernameLabel);
+        msgContainer.add(msgLabel);
+        msgPanel.add(msgContainer);
+        msgContainer.add(Box.createVerticalStrut(20)); //add the gap under each msg container
+        msgPanel.revalidate();
+        msgPanel.repaint();
+
+        SwingUtilities.invokeLater(() -> {
+            JScrollPane scrollPane = (JScrollPane) msgPanel.getParent().getParent();
+            scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum());
+        });
+
     }
 
     private static JButton createIconButton(String resourcePath) {

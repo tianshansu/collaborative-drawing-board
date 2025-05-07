@@ -26,4 +26,12 @@ public interface ClientInterface extends Remote {
      * @throws RemoteException RemoteException
      */
     void updateCanvas(List<ShapesDrawn> shapesDrawnList) throws RemoteException;
+
+    /**
+     * update client's UI to show new chat msg
+     * @param username username of that msg
+     * @param chatMsg the actual chat msg
+     * @throws RemoteException RemoteException
+     */
+    void updateChatMsg(String username,String chatMsg) throws RemoteException;
 }
