@@ -39,5 +39,17 @@ public interface ServerInterface extends Remote {
      */
     void drawNewShape(ShapesDrawn shape) throws RemoteException;
 
+    /**
+     * broadcast the new chat msg to all clients
+     * @param username username of that msg sender
+     * @param msg the actual msg
+     * @throws RemoteException RemoteException
+     */
     void sendNewChatMsg(String username, String msg) throws RemoteException;
+
+    /**
+     * Empty the drawing canvas (the new button on server side)
+     * @throws RemoteException RemoteException
+     */
+    void clearCanvas () throws RemoteException;
 }

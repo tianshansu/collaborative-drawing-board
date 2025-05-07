@@ -34,7 +34,6 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         serverUI.setCurrentUserName(username);
     }
 
-
     /**
      * Register the new client in server for future remote function invocation
      * @param username client's username
@@ -59,7 +58,6 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
     @Override
     public boolean requestJoin(String username) throws RemoteException {
         final int[] allowJoin = new int[1];
-
         try {
             SwingUtilities.invokeAndWait(() ->
                     allowJoin[0] = JOptionPane.showConfirmDialog(
@@ -102,10 +100,28 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         }
     }
 
+    /**
+     * broadcast the new chat msg to all clients
+     * @param username username of that msg sender
+     * @param msg the actual msg
+     * @throws RemoteException RemoteException
+     */
     @Override
     public void sendNewChatMsg(String username, String msg) throws RemoteException {
         for (ClientInterface client : connectedClients.values()) {
             client.updateChatMsg(username,msg);
+        }
+    }
+
+    /**
+     * Empty the drawing canvas (the new button on server side)
+     * @throws RemoteException RemoteException
+     */
+    @Override
+    public void clearCanvas() throws RemoteException {
+        shapesDrawnList.clear();
+        for (ClientInterface client : connectedClients.values()) {
+            client.updateCanvas(shapesDrawnList);
         }
     }
 

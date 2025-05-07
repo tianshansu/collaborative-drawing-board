@@ -64,6 +64,7 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
      */
     public void updateCanvas(List<ShapesDrawn> shapesDrawnList) throws RemoteException {
         ui.updateCanvas(shapesDrawnList);
+
     }
 
     /**

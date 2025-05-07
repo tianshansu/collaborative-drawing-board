@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class WhiteBoardUIBasic extends JFrame {
-    private final DefaultListModel<String> userListModel;
+    private DefaultListModel<String> userListModel;
     private Point startPt;
     private Point endPt;
     private Shape currentShape;
@@ -34,75 +34,141 @@ public class WhiteBoardUIBasic extends JFrame {
         setSize(1200, 800);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //initialise the right panel (user list + chat)
+        initialiseRightPanel();
+        //initialise the main panel (top toolbar + drawing canvas)
+        initialiseMainPanel();
+        setVisible(true);
+    }
 
-        //create the right panel to store user list and chat panels
-        JPanel rightPanel = new JPanel();
-        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
-        rightPanel.setPreferredSize(new Dimension(300, 800));
+    /**
+     * set server interface
+     * @param serverInterface serverInterface
+     */
+    public void setServerInterface(ServerInterface serverInterface) {
+        this.serverInterface = serverInterface;
+    }
 
+    /**
+     * set current user's usrename - to pass it to server during chatting
+     * @param currentUserName currentUserName
+     */
+    public void setCurrentUserName(String currentUserName) {
+        this.currentUserName = currentUserName;
+    }
 
-        //user list panel
-        JPanel userListPanel = new JPanel();
-        userListPanel.setBackground(Color.WHITE);
-        userListPanel.setPreferredSize(new Dimension(300, 200));
-        userListPanel.setBorder(BorderFactory.createTitledBorder("User List"));
-        rightPanel.add(userListPanel);
+    /**
+     * Update the user list on UI
+     * @param userList new username list
+     */
+    public void updateUserList(List<String> userList) {
+        userListModel.clear();
+        for (String name : userList) {
+            userListModel.addElement(name);
+        }
+    }
 
-        //add user list component
-        userListModel = new DefaultListModel<>();
-        JList<String> userList = new JList<>(userListModel);
-        userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane scrollPane = new JScrollPane(userList);
-        scrollPane.setPreferredSize(new Dimension(300, 200));
-        userListPanel.add(scrollPane, BorderLayout.CENTER);
+    /**
+     * update the drawing canvas
+     * @param drawnList the shapes drawing history list
+     */
+    public void updateCanvas(List<ShapesDrawn> drawnList) {
+        allShapes.clear();
+        allShapes.addAll(drawnList);
+        System.out.println(allShapes.size());
+        startPt = null;
+        endPt = null;
+        freeDrawPoints.clear();
+        repaint();
+    }
 
-        //chat panel
-        JPanel chatPanel = new JPanel();
-        chatPanel.setBackground(Color.WHITE);
-        chatPanel.setPreferredSize(new Dimension(300, 600));
-        chatPanel.setBorder(BorderFactory.createTitledBorder("Chat"));
-        chatPanel.setLayout(new BorderLayout());
-        //msg panel
-        msgPanel = new JPanel();
-        msgPanel.setBackground(Color.WHITE);
-        msgPanel.setLayout(new BoxLayout(msgPanel, BoxLayout.Y_AXIS));
-        JScrollPane msgScrollPane = new JScrollPane(msgPanel);
-        chatPanel.add(msgScrollPane, BorderLayout.CENTER);
+    public void addNewChatMsg(String username, String chatMsg) {
+        JLabel msgLabel = new JLabel( "<html><body style='width:220px;'>" + chatMsg + "</body></html>");//auto change line
+        msgLabel.setFont(new Font("Arial", Font.PLAIN, 20));
 
-        //input panel
-        JPanel inputPanel = new JPanel();
-        inputPanel.setBackground(Color.WHITE);
-        inputPanel.setPreferredSize(new Dimension(300, 50));
-        inputPanel.setBorder(BorderFactory.createTitledBorder(""));
-        inputPanel.setLayout(new BorderLayout());
-        //input box
-        JTextArea inputArea = new JTextArea();
-        inputArea.setPreferredSize(new Dimension(280, 50));
-        inputArea.setBackground(Color.WHITE);
-        inputArea.setBorder(BorderFactory.createTitledBorder(""));
-        inputArea.setLineWrap(true);
-        inputArea.setWrapStyleWord(true);
-        inputPanel.add(inputArea, BorderLayout.CENTER);
-        //send msg button
-        JButton sendButton = new JButton("Send");
-        sendButton.addActionListener(e -> {
-            if (!inputArea.getText().isEmpty()) {
-                //send the msg to server and broadcast
-                try {
-                    serverInterface.sendNewChatMsg(currentUserName,inputArea.getText());
-                    inputArea.setText("");//clear the input box
-                } catch (RemoteException ex) {
-                    throw new RuntimeException(ex);
-                }
+        JLabel usernameLabel = new JLabel(username);
+        usernameLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+
+        JPanel msgContainer = new JPanel();
+        msgContainer.setBackground(Color.WHITE);
+        msgContainer.setLayout(new BoxLayout(msgContainer, BoxLayout.Y_AXIS));
+        msgContainer.add(usernameLabel);
+        msgContainer.add(msgLabel);
+        msgPanel.add(msgContainer);
+        msgContainer.add(Box.createVerticalStrut(20)); //add the gap under each msg container
+        msgPanel.revalidate();
+        msgPanel.repaint();
+
+        SwingUtilities.invokeLater(() -> {
+            JScrollPane scrollPane = (JScrollPane) msgPanel.getParent().getParent();
+            scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum());
+        });
+
+    }
+
+    private static JButton createIconButton(String resourcePath) {
+        ImageIcon img = new ImageIcon(Objects.requireNonNull(WhiteBoardUIBasic.class.getResource(resourcePath)));
+        JButton button = new JButton(img);
+        button.setBorderPainted(false);
+        button.setContentAreaFilled(false);
+        button.setFocusPainted(false);
+        button.setOpaque(false);
+        button.setPreferredSize(new Dimension(35, 35));
+
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                button.setContentAreaFilled(true);
+                button.setBackground(new Color(200, 200, 200));
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                button.setContentAreaFilled(false);
             }
         });
-        inputPanel.add(sendButton, BorderLayout.EAST);
-        chatPanel.add(inputPanel, BorderLayout.SOUTH);
-        rightPanel.add(chatPanel);
+        return button;
+    }
 
-        //add the right panel to jFrame
-        add(rightPanel, BorderLayout.EAST);
+    private void drawLine(Graphics2D graphics2D, Point startPt, Point endPt) {
+        graphics2D.drawLine(startPt.x, startPt.y, endPt.x, endPt.y);
+    }
 
+    private void drawTriangle(Graphics2D graphics2D, Point startPt, Point endPt) {
+        Point p1 = new Point((startPt.x + endPt.x) / 2, startPt.y);
+        Point p2 = new Point(startPt.x, endPt.y);
+        Point p3 = new Point(endPt.x, endPt.y);
+        int[] xPoints = {p1.x, p2.x, p3.x};
+        int[] yPoints = {p1.y, p2.y, p3.y};
+        graphics2D.drawPolygon(xPoints, yPoints, 3);
+    }
+
+    private void drawOval(Graphics2D graphics2D, Point startPt, Point endPt) {
+        int x = Math.min(startPt.x, endPt.x);
+        int y = Math.min(startPt.y, endPt.y);
+        int width = Math.abs(endPt.x - startPt.x);
+        int height = Math.abs(endPt.y - startPt.y);
+        graphics2D.drawOval(x, y, width, height);
+    }
+
+    private void drawRect(Graphics2D graphics2D, Point startPt, Point endPt) {
+        int x = Math.min(startPt.x, endPt.x);
+        int y = Math.min(startPt.y, endPt.y);
+        int width = Math.abs(endPt.x - startPt.x);
+        int height = Math.abs(endPt.y - startPt.y);
+
+        graphics2D.drawRect(x, y, width, height);
+    }
+
+    private void freeDraw(Graphics2D graphics2D, List<Point> freeDrawPoints) {
+        for (int i = 1; i < freeDrawPoints.size(); i++) {
+            Point p1 = freeDrawPoints.get(i - 1);
+            Point p2 = freeDrawPoints.get(i);
+            graphics2D.drawLine(p1.x, p1.y, p2.x, p2.y);
+        }
+    }
+
+    private void initialiseMainPanel() {
         //create the container panel for the left side (toolbar + canvas)
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout());
@@ -306,7 +372,6 @@ public class WhiteBoardUIBasic extends JFrame {
 
                 //draw all existing shapes
                 for (ShapesDrawn shapesDrawn : allShapes) {
-
                     graphics2D.setStroke(new BasicStroke(shapesDrawn.getPenSize()));
                     graphics2D.setColor(shapesDrawn.getColor());
                     switch (shapesDrawn.getShape()) {
@@ -342,19 +407,29 @@ public class WhiteBoardUIBasic extends JFrame {
                     graphics2D.setColor(currentColor);
                     switch (currentShape) {
                         case LINE:
-                            drawLine(graphics2D, startPt, endPt); // draw line
+                            if (startPt != null && endPt != null) {
+                                drawLine(graphics2D, startPt, endPt); // draw line
+                            }
                             break;
                         case TRIANGLE:
-                            drawTriangle(graphics2D, startPt, endPt);//draw triangle
+                            if (startPt != null && endPt != null) {
+                                drawTriangle(graphics2D, startPt, endPt);//draw triangle
+                            }
                             break;
                         case OVAL:
-                            drawOval(graphics2D, startPt, endPt);//draw oval
+                            if (startPt != null && endPt != null) {
+                                drawOval(graphics2D, startPt, endPt);//draw oval
+                            }
                             break;
                         case RECTANGLE:
-                            drawRect(graphics2D, startPt, endPt);//draw rectangle
+                            if (startPt != null && endPt != null) {
+                                drawRect(graphics2D, startPt, endPt);//draw rectangle
+                            }
                             break;
                         case FREE_DRAW:
-                            freeDraw(graphics2D, freeDrawPoints);//free draw
+                            if (freeDrawPoints.size() > 1) {
+                                freeDraw(graphics2D, freeDrawPoints);
+                            }
                             break;
                         default:
                             break;
@@ -372,131 +447,77 @@ public class WhiteBoardUIBasic extends JFrame {
 
         //add the main panel to screen
         add(mainPanel, BorderLayout.WEST);
-
-        setVisible(true);
     }
 
-    /**
-     * set server interface
-     * @param serverInterface serverInterface
-     */
-    public void setServerInterface(ServerInterface serverInterface) {
-        this.serverInterface = serverInterface;
-    }
+    private void initialiseRightPanel() {
+        //create the right panel to store user list and chat panels
+        JPanel rightPanel = new JPanel();
+        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+        rightPanel.setPreferredSize(new Dimension(300, 800));
 
-    /**
-     * set current user's usrename - to pass it to server during chatting
-     * @param currentUserName currentUserName
-     */
-    public void setCurrentUserName(String currentUserName) {
-        this.currentUserName = currentUserName;
-    }
 
-    /**
-     * Update the user list on UI
-     * @param userList new username list
-     */
-    public void updateUserList(List<String> userList) {
-        userListModel.clear();
-        for (String name : userList) {
-            userListModel.addElement(name);
-        }
-    }
+        //user list panel
+        JPanel userListPanel = new JPanel();
+        userListPanel.setBackground(Color.WHITE);
+        userListPanel.setPreferredSize(new Dimension(300, 200));
+        userListPanel.setBorder(BorderFactory.createTitledBorder("User List"));
+        rightPanel.add(userListPanel);
 
-    /**
-     * update the drawing canvas
-     * @param drawnList the shapes drawing history list
-     */
-    public void updateCanvas(List<ShapesDrawn> drawnList) {
-        allShapes.clear();
-        allShapes.addAll(drawnList);
-        repaint();
-    }
+        //add user list component
+        userListModel = new DefaultListModel<>();
+        JList<String> userList = new JList<>(userListModel);
+        userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(userList);
+        scrollPane.setPreferredSize(new Dimension(300, 200));
+        userListPanel.add(scrollPane, BorderLayout.CENTER);
 
-    public void addNewChatMsg(String username, String chatMsg) {
-        JLabel msgLabel = new JLabel( "<html><body style='width:220px;'>" + chatMsg + "</body></html>");//auto change line
-        msgLabel.setFont(new Font("Arial", Font.PLAIN, 20));
+        //chat panel
+        JPanel chatPanel = new JPanel();
+        chatPanel.setBackground(Color.WHITE);
+        chatPanel.setPreferredSize(new Dimension(300, 600));
+        chatPanel.setBorder(BorderFactory.createTitledBorder("Chat"));
+        chatPanel.setLayout(new BorderLayout());
+        //msg panel
+        msgPanel = new JPanel();
+        msgPanel.setBackground(Color.WHITE);
+        msgPanel.setLayout(new BoxLayout(msgPanel, BoxLayout.Y_AXIS));
+        JScrollPane msgScrollPane = new JScrollPane(msgPanel);
+        chatPanel.add(msgScrollPane, BorderLayout.CENTER);
 
-        JLabel usernameLabel = new JLabel(username);
-        usernameLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-
-        JPanel msgContainer = new JPanel();
-        msgContainer.setBackground(Color.WHITE);
-        msgContainer.setLayout(new BoxLayout(msgContainer, BoxLayout.Y_AXIS));
-        msgContainer.add(usernameLabel);
-        msgContainer.add(msgLabel);
-        msgPanel.add(msgContainer);
-        msgContainer.add(Box.createVerticalStrut(20)); //add the gap under each msg container
-        msgPanel.revalidate();
-        msgPanel.repaint();
-
-        SwingUtilities.invokeLater(() -> {
-            JScrollPane scrollPane = (JScrollPane) msgPanel.getParent().getParent();
-            scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMaximum());
-        });
-
-    }
-
-    private static JButton createIconButton(String resourcePath) {
-        ImageIcon img = new ImageIcon(Objects.requireNonNull(WhiteBoardUIBasic.class.getResource(resourcePath)));
-        JButton button = new JButton(img);
-        button.setBorderPainted(false);
-        button.setContentAreaFilled(false);
-        button.setFocusPainted(false);
-        button.setOpaque(false);
-        button.setPreferredSize(new Dimension(35, 35));
-
-        button.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setContentAreaFilled(true);
-                button.setBackground(new Color(200, 200, 200));
-            }
-
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setContentAreaFilled(false);
+        //input panel
+        JPanel inputPanel = new JPanel();
+        inputPanel.setBackground(Color.WHITE);
+        inputPanel.setPreferredSize(new Dimension(300, 50));
+        inputPanel.setBorder(BorderFactory.createTitledBorder(""));
+        inputPanel.setLayout(new BorderLayout());
+        //input box
+        JTextArea inputArea = new JTextArea();
+        inputArea.setPreferredSize(new Dimension(280, 50));
+        inputArea.setBackground(Color.WHITE);
+        inputArea.setBorder(BorderFactory.createTitledBorder(""));
+        inputArea.setLineWrap(true);
+        inputArea.setWrapStyleWord(true);
+        inputPanel.add(inputArea, BorderLayout.CENTER);
+        //send msg button
+        JButton sendButton = new JButton("Send");
+        sendButton.addActionListener(e -> {
+            if (!inputArea.getText().isEmpty()) {
+                //send the msg to server and broadcast
+                try {
+                    serverInterface.sendNewChatMsg(currentUserName,inputArea.getText());
+                    inputArea.setText("");//clear the input box
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
-        return button;
-    }
+        inputPanel.add(sendButton, BorderLayout.EAST);
+        chatPanel.add(inputPanel, BorderLayout.SOUTH);
+        rightPanel.add(chatPanel);
 
-    private void drawLine(Graphics2D graphics2D, Point startPt, Point endPt) {
-        graphics2D.drawLine(startPt.x, startPt.y, endPt.x, endPt.y);
-    }
+        //add the right panel to jFrame
+        add(rightPanel, BorderLayout.EAST);
 
-    private void drawTriangle(Graphics2D graphics2D, Point startPt, Point endPt) {
-        Point p1 = new Point((startPt.x + endPt.x) / 2, startPt.y);
-        Point p2 = new Point(startPt.x, endPt.y);
-        Point p3 = new Point(endPt.x, endPt.y);
-        int[] xPoints = {p1.x, p2.x, p3.x};
-        int[] yPoints = {p1.y, p2.y, p3.y};
-        graphics2D.drawPolygon(xPoints, yPoints, 3);
-    }
-
-    private void drawOval(Graphics2D graphics2D, Point startPt, Point endPt) {
-        int x = Math.min(startPt.x, endPt.x);
-        int y = Math.min(startPt.y, endPt.y);
-        int width = Math.abs(endPt.x - startPt.x);
-        int height = Math.abs(endPt.y - startPt.y);
-        graphics2D.drawOval(x, y, width, height);
-    }
-
-    private void drawRect(Graphics2D graphics2D, Point startPt, Point endPt) {
-        int x = Math.min(startPt.x, endPt.x);
-        int y = Math.min(startPt.y, endPt.y);
-        int width = Math.abs(endPt.x - startPt.x);
-        int height = Math.abs(endPt.y - startPt.y);
-
-        graphics2D.drawRect(x, y, width, height);
-    }
-
-    private void freeDraw(Graphics2D graphics2D, List<Point> freeDrawPoints) {
-        for (int i = 1; i < freeDrawPoints.size(); i++) {
-            Point p1 = freeDrawPoints.get(i - 1);
-            Point p2 = freeDrawPoints.get(i);
-            graphics2D.drawLine(p1.x, p1.y, p2.x, p2.y);
-        }
     }
 }
 
