@@ -104,7 +104,11 @@ public class ShapesDrawn implements Serializable {
      * @return the pts
      */
     public List<Point> getPoints() {
-        return new ArrayList<>(points);
+        if(points !=null){
+            return new ArrayList<>(points);
+        }
+        return new ArrayList<>();
+
     }
 
     /**

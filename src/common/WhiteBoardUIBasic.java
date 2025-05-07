@@ -16,7 +16,8 @@ public class WhiteBoardUIBasic extends JFrame {
     private Point startPt;
     private Point endPt;
     private Shape currentShape;
-    private Color currentColor = Color.black;
+    private Color currentColor = Color.BLACK;
+    private Color colourBeforeEraser = Color.BLACK;
     private Font currentFont;
     private int penSize = 3;
     private ServerInterface serverInterface;
@@ -79,6 +80,7 @@ public class WhiteBoardUIBasic extends JFrame {
         JButton lineButton = createIconButton("/common/assets/line-resized.png");
         lineButton.addActionListener(e -> {
             currentShape = Shape.LINE;
+            currentColor = colourBeforeEraser; //change the colour back to the previous colour
         });
         topToolPanel.add(lineButton);
 
@@ -86,6 +88,7 @@ public class WhiteBoardUIBasic extends JFrame {
         JButton triangleButton = createIconButton("/common/assets/triangle-resized.png");
         triangleButton.addActionListener(e -> {
             currentShape = Shape.TRIANGLE;
+            currentColor = colourBeforeEraser;
         });
         topToolPanel.add(triangleButton);
 
@@ -93,6 +96,7 @@ public class WhiteBoardUIBasic extends JFrame {
         JButton ovalButton = createIconButton("/common/assets/oval-resized.png");
         ovalButton.addActionListener(e -> {
             currentShape = Shape.OVAL;
+            currentColor = colourBeforeEraser;
         });
         topToolPanel.add(ovalButton);
 
@@ -100,6 +104,7 @@ public class WhiteBoardUIBasic extends JFrame {
         JButton rectButton = createIconButton("/common/assets/rect-resized.png");
         rectButton.addActionListener(e -> {
             currentShape = Shape.RECTANGLE;
+            currentColor = colourBeforeEraser;
         });
         topToolPanel.add(rectButton);
 
@@ -107,6 +112,7 @@ public class WhiteBoardUIBasic extends JFrame {
         JButton freeDrawButton = createIconButton("/common/assets/free-resized.png");
         freeDrawButton.addActionListener(e -> {
             currentShape = Shape.FREE_DRAW;
+            currentColor = colourBeforeEraser;
         });
         topToolPanel.add(freeDrawButton);
 
@@ -114,9 +120,8 @@ public class WhiteBoardUIBasic extends JFrame {
         JButton textButton = createIconButton("/common/assets/text-resized.png");
         textButton.addActionListener(e -> {
             currentShape = Shape.TEXT;
+            currentColor = colourBeforeEraser;
         });
-
-
         topToolPanel.add(textButton);
 
         //eraser
@@ -135,6 +140,7 @@ public class WhiteBoardUIBasic extends JFrame {
         colourButton.setBorderPainted(false);
         colourButton.addActionListener(e -> {
             currentColor = JColorChooser.showDialog(null, "Choose a color", currentColor);
+            colourBeforeEraser = currentColor;
             colourButton.setBackground(currentColor);
         });
         topToolPanel.add(colourButton);
