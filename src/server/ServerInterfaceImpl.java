@@ -3,8 +3,11 @@ package server;
 import common.ShapesDrawn;
 import common.interfaces.ClientInterface;
 import common.interfaces.ServerInterface;
+import constants.ServerConstants;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -117,11 +120,52 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
      * Empty the drawing canvas (the new button on server side)
      * @throws RemoteException RemoteException
      */
-    @Override
     public void clearCanvas() throws RemoteException {
         shapesDrawnList.clear();
         for (ClientInterface client : connectedClients.values()) {
             client.updateCanvas(shapesDrawnList);
+        }
+    }
+
+    /**
+     * Save the current canvas to file
+     * @param filename new filename
+     * @throws RemoteException RemoteException
+     */
+    public void saveCanvasToFile(String filename) throws RemoteException {
+        try {
+            //check whether the directory exists, if not create the directory
+            File dir = new File(ServerConstants.CANVAS_SAVE_PATH);
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+            //write the list to file
+            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(ServerConstants.CANVAS_SAVE_PATH + filename));
+            oos.writeObject(shapesDrawnList);
+            oos.close();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Load a canvas from file
+     * @param filename new filename
+     * @throws RemoteException RemoteException
+     */
+    public void loadCanvasFromFile(String filename) throws RemoteException {
+        try {
+            clearCanvas(); //clear the current canvas
+            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(ServerConstants.CANVAS_SAVE_PATH+ filename));
+            List<ShapesDrawn> loadedList = (List<ShapesDrawn>) ois.readObject();
+            shapesDrawnList.clear();
+            shapesDrawnList.addAll(loadedList);//add the contents in the current list
+            //display the new canvas in all client UIs
+            for (ClientInterface client : connectedClients.values()) {
+                client.updateCanvas(shapesDrawnList);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -134,6 +178,11 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
             client.getNotifiedWhenManagerDisconnected();
         }
     }
+
+//    public void saveAsImg(String filename) throws RemoteException {
+//        File output = new File("output.jpg");
+//        ImageIO.write(image, "jpg", output);
+//    }
 
 
     private void updateUserListForAllUsers() throws RemoteException {

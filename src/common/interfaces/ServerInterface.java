@@ -47,9 +47,4 @@ public interface ServerInterface extends Remote {
      */
     void sendNewChatMsg(String username, String msg) throws RemoteException;
 
-    /**
-     * Empty the drawing canvas (the new button on server side)
-     * @throws RemoteException RemoteException
-     */
-    void clearCanvas () throws RemoteException;
 }

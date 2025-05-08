@@ -4,6 +4,8 @@ import common.interfaces.ServerInterface;
 import enums.Shape;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.rmi.RemoteException;
@@ -32,6 +34,7 @@ public class WhiteBoardUIBasic extends JFrame {
      */
     public WhiteBoardUIBasic() {
         setSize(1200, 800);
+        setResizable(false);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //initialise the right panel (user list + chat)
@@ -39,6 +42,14 @@ public class WhiteBoardUIBasic extends JFrame {
         //initialise the main panel (top toolbar + drawing canvas)
         initialiseMainPanel();
         setVisible(true);
+    }
+
+    /**
+     * Get drawing panel
+     * @return
+     */
+    protected JPanel getDrawingPanel() {
+        return drawingPanel;
     }
 
     /**
@@ -75,7 +86,6 @@ public class WhiteBoardUIBasic extends JFrame {
     public void updateCanvas(List<ShapesDrawn> drawnList) {
         allShapes.clear();
         allShapes.addAll(drawnList);
-        System.out.println(allShapes.size());
         startPt = null;
         endPt = null;
         freeDrawPoints.clear();
@@ -171,6 +181,7 @@ public class WhiteBoardUIBasic extends JFrame {
     private void initialiseMainPanel() {
         //create the container panel for the left side (toolbar + canvas)
         JPanel mainPanel = new JPanel();
+        mainPanel.setPreferredSize(new Dimension(887, 70));
         mainPanel.setLayout(new BorderLayout());
 
         //create the top panel to store all buttons (relate to drawing)
@@ -178,7 +189,7 @@ public class WhiteBoardUIBasic extends JFrame {
         topToolPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         topToolPanel.setPreferredSize(new Dimension(900, 70));
         topToolPanel.setBackground(Color.WHITE);
-        topToolPanel.setBorder(BorderFactory.createTitledBorder("Toolbar"));
+        topToolPanel.setBorder(createBorderWithTitle(Color.BLACK,"Toolbar"));
 
         //add the UI buttons to top tool panel
         //line
@@ -391,7 +402,6 @@ public class WhiteBoardUIBasic extends JFrame {
                             freeDraw(graphics2D, shapesDrawn.getPoints());//free draw lines
                             break;
                         case TEXT:
-                            //System.out.println("text");
                             graphics2D.setColor(shapesDrawn.getColor());
                             graphics2D.setFont(shapesDrawn.getFont());
                             graphics2D.drawString(shapesDrawn.getText(), shapesDrawn.getStartPt().x, shapesDrawn.getStartPt().y+40);
@@ -438,9 +448,9 @@ public class WhiteBoardUIBasic extends JFrame {
             }
         };
         drawingPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-        drawingPanel.setPreferredSize(new Dimension(900, 730));
+        drawingPanel.setPreferredSize(new Dimension(800, 730));
         drawingPanel.setBackground(Color.WHITE);
-        drawingPanel.setBorder(BorderFactory.createTitledBorder("Drawing Canvas"));
+        drawingPanel.setBorder(createBorderWithTitle(Color.BLACK,"Drawing Canvas"));
 
         //add the drawing panel to mainPanel
         mainPanel.add(drawingPanel, BorderLayout.CENTER);
@@ -455,12 +465,11 @@ public class WhiteBoardUIBasic extends JFrame {
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         rightPanel.setPreferredSize(new Dimension(300, 800));
 
-
         //user list panel
         JPanel userListPanel = new JPanel();
         userListPanel.setBackground(Color.WHITE);
         userListPanel.setPreferredSize(new Dimension(300, 200));
-        userListPanel.setBorder(BorderFactory.createTitledBorder("User List"));
+        userListPanel.setBorder(createBorderWithTitle(Color.BLACK,"User List"));
         rightPanel.add(userListPanel);
 
         //add user list component
@@ -468,33 +477,37 @@ public class WhiteBoardUIBasic extends JFrame {
         JList<String> userList = new JList<>(userListModel);
         userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane scrollPane = new JScrollPane(userList);
-        scrollPane.setPreferredSize(new Dimension(300, 200));
+        scrollPane.setBorder(null);
+        scrollPane.setPreferredSize(new Dimension(290, 160));
         userListPanel.add(scrollPane, BorderLayout.CENTER);
 
         //chat panel
         JPanel chatPanel = new JPanel();
         chatPanel.setBackground(Color.WHITE);
         chatPanel.setPreferredSize(new Dimension(300, 600));
-        chatPanel.setBorder(BorderFactory.createTitledBorder("Chat"));
+        chatPanel.setBorder(createBorderWithTitle(Color.BLACK,"Chat"));
         chatPanel.setLayout(new BorderLayout());
         //msg panel
         msgPanel = new JPanel();
         msgPanel.setBackground(Color.WHITE);
         msgPanel.setLayout(new BoxLayout(msgPanel, BoxLayout.Y_AXIS));
         JScrollPane msgScrollPane = new JScrollPane(msgPanel);
+        msgScrollPane.setBorder(null);
         chatPanel.add(msgScrollPane, BorderLayout.CENTER);
 
         //input panel
         JPanel inputPanel = new JPanel();
         inputPanel.setBackground(Color.WHITE);
         inputPanel.setPreferredSize(new Dimension(300, 50));
-        inputPanel.setBorder(BorderFactory.createTitledBorder(""));
+        //inputPanel.setBorder(BorderFactory.createTitledBorder(""));
+        inputPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK,1));
         inputPanel.setLayout(new BorderLayout());
         //input box
         JTextArea inputArea = new JTextArea();
         inputArea.setPreferredSize(new Dimension(280, 50));
         inputArea.setBackground(Color.WHITE);
-        inputArea.setBorder(BorderFactory.createTitledBorder(""));
+        //inputArea.setBorder(BorderFactory.createTitledBorder(""));
+        inputArea.setBorder(BorderFactory.createLineBorder(Color.BLACK,1));
         inputArea.setLineWrap(true);
         inputArea.setWrapStyleWord(true);
         inputPanel.add(inputArea, BorderLayout.CENTER);
@@ -518,6 +531,13 @@ public class WhiteBoardUIBasic extends JFrame {
         //add the right panel to jFrame
         add(rightPanel, BorderLayout.EAST);
 
+    }
+
+    private TitledBorder createBorderWithTitle(Color borderColor,String title) {
+        TitledBorder border = BorderFactory.createTitledBorder(
+                new LineBorder(borderColor), title
+        );
+        return border;
     }
 }
 

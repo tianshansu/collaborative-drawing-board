@@ -142,4 +142,22 @@ public class ShapesDrawn implements Serializable {
     public Font getFont() {
         return font;
     }
+
+    /**
+     * To string
+     * @return a string
+     */
+    @Override
+    public String toString() {
+        return "ShapesDrawn{" +
+                "shape=" + shape +
+                ", startPt=" + startPt +
+                ", endPt=" + endPt +
+                ", points=" + points +
+                ", color=" + color +
+                ", penSize=" + penSize +
+                ", text='" + text + '\'' +
+                ", font=" + font +
+                '}';
+    }
 }
