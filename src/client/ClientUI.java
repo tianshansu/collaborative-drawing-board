@@ -3,12 +3,16 @@ package client;
 import common.interfaces.ServerInterface;
 import common.WhiteBoardUIBasic;
 
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
+import java.util.List;
 
 public class ClientUI extends WhiteBoardUIBasic {
     ServerInterface server;
+    private DefaultListModel<String> userListModel;
 
     /**
      * Constructor
@@ -35,5 +39,29 @@ public class ClientUI extends WhiteBoardUIBasic {
 
     }
 
+    /**
+     * Update the user list
+     * @param userList new username list
+     */
+    @Override
+    public void updateUserList(List<String> userList) {
+        userListModel.clear();
+        for (String name : userList) {
+            userListModel.addElement(name);
+        }
+    }
 
+    @Override
+    protected void addUserListPanel(){
+        super.addUserListPanel();
+
+        //add user list component
+        userListModel = new DefaultListModel<>();
+        JList<String> userList = new JList<>(userListModel);
+        userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(userList);
+        scrollPane.setBorder(null);
+        scrollPane.setPreferredSize(new Dimension(290, 160));
+        userListPanel.add(scrollPane, BorderLayout.CENTER);
+    }
 }

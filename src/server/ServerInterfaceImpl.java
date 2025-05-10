@@ -4,8 +4,6 @@ import common.ShapesDrawn;
 import common.interfaces.ClientInterface;
 import common.interfaces.ServerInterface;
 import constants.ServerConstants;
-
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -86,6 +84,7 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
     public void userDisconnect(String username) throws RemoteException {
         currentUsernames.remove(username);
         connectedClients.remove(username);
+
         updateUserListForAllUsers();
 
     }
@@ -179,11 +178,31 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         }
     }
 
-//    public void saveAsImg(String filename) throws RemoteException {
-//        File output = new File("output.jpg");
-//        ImageIO.write(image, "jpg", output);
-//    }
+    /**
+     * kick a user by username
+     * @param username user's username
+     * @throws RemoteException RemoteException
+     */
+    @Override
+    public void kickUser(String username) throws RemoteException {
+        //remove the connection
+        ClientInterface user = connectedClients.get(username);
+        if(user != null) {
+            userDisconnect(username); //remove the user's username from the list and update ui for everyone
+            serverUI.updateUserList(currentUsernames);
 
+            //kick the user after manager UI has been updated
+            new Thread(() -> {
+                try {
+                    user.kicked();
+                } catch (RemoteException e) {
+                    System.out.println(e.getMessage());
+                }
+            }).start();
+
+        }
+
+    }
 
     private void updateUserListForAllUsers() throws RemoteException {
         serverUI.updateUserList(currentUsernames);

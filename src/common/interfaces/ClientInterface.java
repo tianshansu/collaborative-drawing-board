@@ -34,4 +34,6 @@ public interface ClientInterface extends Remote {
      * @throws RemoteException RemoteException
      */
     void updateChatMsg(String username,String chatMsg) throws RemoteException;
+
+    void kicked() throws RemoteException;
 }

@@ -47,7 +47,7 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
      */
     @Override
     public void getNotifiedWhenManagerDisconnected() throws RemoteException {
-        new Thread(() -> {
+        SwingUtilities.invokeLater(() -> {
             JOptionPane.showMessageDialog(
                     ui,
                     ClientConstants.MANAGER_DISCONNECTED,
@@ -55,7 +55,7 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
                     JOptionPane.WARNING_MESSAGE
             );
             System.exit(0);
-        }).start();
+        });
     }
 
     /**
@@ -76,6 +76,19 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
     @Override
     public void updateChatMsg(String username, String chatMsg) throws RemoteException {
         ui.addNewChatMsg(username, chatMsg);
+    }
+
+    /**
+     * This current user being kicked by the manager
+     * @throws RemoteException RemoteException
+     */
+    @Override
+    public void kicked() throws RemoteException {
+        //show msg and exit
+        JOptionPane.showMessageDialog(ui, ClientConstants.KICKED_BY_MANAGER, ClientConstants.KICKED_TITLE, JOptionPane.WARNING_MESSAGE);
+
+        //exit
+        System.exit(0);
     }
 
 }

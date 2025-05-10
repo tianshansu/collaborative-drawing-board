@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class WhiteBoardUIBasic extends JFrame {
-    private DefaultListModel<String> userListModel;
+
     private Point startPt;
     private Point endPt;
     private Shape currentShape;
@@ -28,6 +28,8 @@ public class WhiteBoardUIBasic extends JFrame {
     private JPanel drawingPanel;
     private JPanel msgPanel;
     private String currentUserName;
+    private JPanel rightPanel;
+    protected JPanel userListPanel;
 
     /**
      * Constructor
@@ -44,9 +46,10 @@ public class WhiteBoardUIBasic extends JFrame {
         setVisible(true);
     }
 
+
     /**
      * Get drawing panel
-     * @return
+     * @return drawing panel
      */
     protected JPanel getDrawingPanel() {
         return drawingPanel;
@@ -73,10 +76,7 @@ public class WhiteBoardUIBasic extends JFrame {
      * @param userList new username list
      */
     public void updateUserList(List<String> userList) {
-        userListModel.clear();
-        for (String name : userList) {
-            userListModel.addElement(name);
-        }
+
     }
 
     /**
@@ -461,25 +461,11 @@ public class WhiteBoardUIBasic extends JFrame {
 
     private void initialiseRightPanel() {
         //create the right panel to store user list and chat panels
-        JPanel rightPanel = new JPanel();
+        rightPanel = new JPanel();
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
         rightPanel.setPreferredSize(new Dimension(300, 800));
 
-        //user list panel
-        JPanel userListPanel = new JPanel();
-        userListPanel.setBackground(Color.WHITE);
-        userListPanel.setPreferredSize(new Dimension(300, 200));
-        userListPanel.setBorder(createBorderWithTitle(Color.BLACK,"User List"));
-        rightPanel.add(userListPanel);
-
-        //add user list component
-        userListModel = new DefaultListModel<>();
-        JList<String> userList = new JList<>(userListModel);
-        userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane scrollPane = new JScrollPane(userList);
-        scrollPane.setBorder(null);
-        scrollPane.setPreferredSize(new Dimension(290, 160));
-        userListPanel.add(scrollPane, BorderLayout.CENTER);
+        addUserListPanel();
 
         //chat panel
         JPanel chatPanel = new JPanel();
@@ -533,7 +519,16 @@ public class WhiteBoardUIBasic extends JFrame {
 
     }
 
-    private TitledBorder createBorderWithTitle(Color borderColor,String title) {
+    protected void addUserListPanel() {
+        //user list panel
+        userListPanel = new JPanel();
+        userListPanel.setBackground(Color.WHITE);
+        userListPanel.setPreferredSize(new Dimension(300, 200));
+        userListPanel.setBorder(createBorderWithTitle(Color.BLACK,"User List"));
+        rightPanel.add(userListPanel);
+    }
+
+    protected TitledBorder createBorderWithTitle(Color borderColor,String title) {
         TitledBorder border = BorderFactory.createTitledBorder(
                 new LineBorder(borderColor), title
         );

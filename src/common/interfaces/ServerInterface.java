@@ -47,4 +47,6 @@ public interface ServerInterface extends Remote {
      */
     void sendNewChatMsg(String username, String msg) throws RemoteException;
 
+    void kickUser(String username) throws RemoteException;
+
 }

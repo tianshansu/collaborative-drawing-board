@@ -1,21 +1,28 @@
 package server;
 
+import common.interfaces.ClientInterface;
 import common.interfaces.ServerInterface;
 import common.WhiteBoardUIBasic;
 import constants.ServerConstants;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.List;
+
 
 public class ServerUI extends WhiteBoardUIBasic {
-    ServerInterface server;
+    private ServerInterface server;
+    private JTable userTable;
 
     public void setServer(ServerInterface server) {
         this.server = server;
@@ -29,6 +36,97 @@ public class ServerUI extends WhiteBoardUIBasic {
         initialseServerUi();
     }
 
+    /**
+     * Update the user list panel
+     * @param userList new username list
+     */
+    @Override
+    public void updateUserList(List<String> userList) {
+        String[] columnNames = { "User", "Operation" };
+
+        if (userList == null || userList.isEmpty()) {
+            userTable.setModel(new DefaultTableModel(new Object[0][2], columnNames));
+            userTable.revalidate();
+            userTable.repaint();
+            return;
+        }
+
+        String[][] data = new String[userList.size()][2];
+        for (int i = 0; i < userList.size(); i++) {
+            data[i][0] = userList.get(i);
+            //only show the kick text for ordinary users
+            if(i!=0){
+                data[i][1] = "kick";
+            }else {
+                data[i][1] = "";
+            }
+
+        }
+
+        userTable.setModel(new DefaultTableModel(data, columnNames) {
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        });
+
+        if (userTable.getColumnCount() >= 2) {
+            userTable.getColumnModel().getColumn(0).setPreferredWidth(200);
+            userTable.getColumnModel().getColumn(1).setPreferredWidth(70);
+        }
+
+        userTable.setShowVerticalLines(false);
+        userTable.setRowSelectionAllowed(false);
+        userTable.setBackground(Color.WHITE);
+        userTable.getTableHeader().setBackground(Color.WHITE);
+        userTable.setGridColor(Color.BLACK);
+        userTable.setShowGrid(true);
+        userTable.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+        userTable.revalidate();
+        userTable.repaint();
+    }
+
+    @Override
+    protected void addUserListPanel(){
+        super.addUserListPanel();
+
+        JScrollPane scrollPaneUsers = new JScrollPane((Component) null);
+        scrollPaneUsers.setPreferredSize(new Dimension(290, 200));
+        scrollPaneUsers.setBackground(Color.WHITE);
+        scrollPaneUsers.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        scrollPaneUsers.getViewport().setBackground(Color.WHITE);
+
+        userTable = new JTable();
+        userTable.setBackground(Color.WHITE);
+        userTable.getTableHeader().setBackground(Color.WHITE);
+
+        //refreshUsers();
+        userTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                //when click the delete text, call service and delete it
+                int row = userTable.rowAtPoint(e.getPoint());
+                int column = userTable.columnAtPoint(e.getPoint());
+
+
+                //only do the action if the client clicked operation column
+                if (column == 1&&row!=0) {
+                    String userToRemove = (String)userTable.getValueAt(row, 0); //get the username of that user
+                    try {
+                        server.kickUser(userToRemove);
+                    } catch (RemoteException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+
+                userTable.revalidate();
+                userTable.repaint();
+            }
+        });
+        scrollPaneUsers.setViewportView(userTable);
+        userListPanel.add(scrollPaneUsers);
+
+    }
 
     private void exit() {
         if (server != null) {
@@ -101,6 +199,7 @@ public class ServerUI extends WhiteBoardUIBasic {
         fileMenu.add(closeItem);
         menuBar.add(fileMenu);
         add(menuBar, BorderLayout.NORTH);
+
     }
 
     private String showInputDialog(String msg, String title) {
