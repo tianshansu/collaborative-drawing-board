@@ -36,4 +36,6 @@ public interface ClientInterface extends Remote {
     void updateChatMsg(String username,String chatMsg) throws RemoteException;
 
     void kicked() throws RemoteException;
+
+    void setWhiteboardActive(boolean active) throws RemoteException;
 }

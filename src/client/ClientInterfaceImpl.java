@@ -37,7 +37,7 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
      */
     @Override
     public void updateUserList(List<String> userList) throws RemoteException {
-        ui.updateUserList(userList);
+        SwingUtilities.invokeLater(() -> ui.updateUserList(userList));
     }
 
     /**
@@ -84,10 +84,21 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
     @Override
     public void kicked() throws RemoteException {
         //show msg and exit
-        JOptionPane.showMessageDialog(ui, ClientConstants.KICKED_BY_MANAGER, ClientConstants.KICKED_TITLE, JOptionPane.WARNING_MESSAGE);
+        SwingUtilities.invokeLater(() -> {
+            JOptionPane.showMessageDialog(
+                    ui,
+                    ClientConstants.KICKED_BY_MANAGER,
+                    ClientConstants.KICKED_TITLE,
+                    JOptionPane.WARNING_MESSAGE
+            );
+            //exit
+            System.exit(0);
+        });
+    }
 
-        //exit
-        System.exit(0);
+    @Override
+    public void setWhiteboardActive(boolean active) throws RemoteException {
+        SwingUtilities.invokeLater(() -> ui.setWhiteboardActive(active));
     }
 
 }

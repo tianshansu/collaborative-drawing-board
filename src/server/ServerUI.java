@@ -1,6 +1,5 @@
 package server;
 
-import common.interfaces.ClientInterface;
 import common.interfaces.ServerInterface;
 import common.WhiteBoardUIBasic;
 import constants.ServerConstants;
@@ -45,9 +44,7 @@ public class ServerUI extends WhiteBoardUIBasic {
         String[] columnNames = { "User", "Operation" };
 
         if (userList == null || userList.isEmpty()) {
-            userTable.setModel(new DefaultTableModel(new Object[0][2], columnNames));
-            userTable.revalidate();
-            userTable.repaint();
+            userTable.setModel(new DefaultTableModel(columnNames, 0));
             return;
         }
 
@@ -127,14 +124,11 @@ public class ServerUI extends WhiteBoardUIBasic {
 
     }
 
-    private void exit() {
-        if (server != null) {
-            try {
-                ((ServerInterfaceImpl) server).notifyClientsWhenOffline();
-            } catch (RemoteException ex) {
-                System.out.println(ex.getMessage());
-            }
-            System.exit(0);
+    private void closeCurrentBoard() {
+        try {
+            ((ServerInterfaceImpl)server).closeBoard();
+        } catch (RemoteException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -145,7 +139,7 @@ public class ServerUI extends WhiteBoardUIBasic {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                exit();
+                closeCurrentBoard();
             }
         });
 
@@ -160,6 +154,7 @@ public class ServerUI extends WhiteBoardUIBasic {
         newItem.addActionListener(e -> {
             try {
                 ((ServerInterfaceImpl) server).clearCanvas();
+                ((ServerInterfaceImpl) server).newBoard();
             } catch (RemoteException ex) {
                 throw new RuntimeException(ex);
             }
@@ -185,11 +180,11 @@ public class ServerUI extends WhiteBoardUIBasic {
         saveAsItem.addActionListener(e -> {
             saveAsImg();
         });
-        //close the window
+        //close the current board
         JMenuItem closeItem = new JMenuItem(ServerConstants.MENU_CLOSE);
         closeItem.setBackground(Color.WHITE);
         closeItem.addActionListener(e -> {
-            exit();
+            closeCurrentBoard();
         });
         fileMenu.add(newItem);
         fileMenu.add(openItem);

@@ -1,6 +1,7 @@
 package common;
 
 import common.interfaces.ServerInterface;
+import constants.ServerConstants;
 import enums.Shape;
 
 import javax.swing.*;
@@ -30,6 +31,7 @@ public class WhiteBoardUIBasic extends JFrame {
     private String currentUserName;
     private JPanel rightPanel;
     protected JPanel userListPanel;
+    protected boolean isWhiteboardActive = true; //the users can draw only if the whiteboard is active
 
     /**
      * Constructor
@@ -46,6 +48,14 @@ public class WhiteBoardUIBasic extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * Set whiteboardActive
+     * @param active true if active
+     */
+    public void setWhiteboardActive(boolean active) {
+        this.isWhiteboardActive = active;
+        repaint();
+    }
 
     /**
      * Get drawing panel
@@ -288,6 +298,7 @@ public class WhiteBoardUIBasic extends JFrame {
             {
                 addMouseListener(new MouseAdapter() {
                     public void mousePressed(MouseEvent e) {
+                        if (!isWhiteboardActive) return; //only can draw if the board is active
                         // free draw
                         if (currentShape == Shape.FREE_DRAW) {
                             freeDrawPoints.clear();
@@ -338,6 +349,7 @@ public class WhiteBoardUIBasic extends JFrame {
 
 
                     public void mouseReleased(MouseEvent e) {
+                        if (!isWhiteboardActive) return; //only can draw if the board is active
                         if (currentShape == Shape.FREE_DRAW) {
                             freeDrawPoints.add(e.getPoint());
                             try {
@@ -368,6 +380,7 @@ public class WhiteBoardUIBasic extends JFrame {
                 addMouseMotionListener(new MouseMotionAdapter() {
                     @Override
                     public void mouseDragged(MouseEvent e) {
+                        if (!isWhiteboardActive) return; //only can draw if the board is active
                         if (currentShape == Shape.FREE_DRAW) {
                             freeDrawPoints.add(e.getPoint());
                             repaint();
@@ -380,6 +393,14 @@ public class WhiteBoardUIBasic extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D graphics2D = (Graphics2D) g;
+
+                //if the current whiteboard in inactive, display the msg
+                if (!isWhiteboardActive) {
+                    graphics2D.setFont(new Font("Arial", Font.BOLD, 24));
+                    graphics2D.setColor(Color.BLACK);
+                    graphics2D.drawString(ServerConstants.NO_ACTIVE_BOARD_MSG, 150, 150);
+                    return;
+                }
 
                 //draw all existing shapes
                 for (ShapesDrawn shapesDrawn : allShapes) {

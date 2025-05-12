@@ -226,6 +226,29 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
 
     }
 
+    /**
+     * Close current whiteboard
+     * @throws RemoteException RemoteException
+     */
+    public void closeBoard() throws RemoteException {
+        shapesDrawnList.clear();
+        for (ClientInterface client : connectedClients.values()) {
+            client.setWhiteboardActive(false);
+            client.updateCanvas(shapesDrawnList);
+        }
+    }
+
+    /**
+     * Create a new whiteboard
+     * @throws RemoteException RemoteException
+     */
+    public void newBoard() throws RemoteException {
+        for (ClientInterface client : connectedClients.values()) {
+            client.setWhiteboardActive(true);
+            client.updateCanvas(shapesDrawnList);
+        }
+    }
+
     private void updateUserListForAllUsers() throws RemoteException {
         serverUI.updateUserList(currentUsernames);
         //update the user list for all clients
