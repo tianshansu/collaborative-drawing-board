@@ -15,7 +15,6 @@ public class CreateWhiteBoard {
 
     /**
      * Main method to start the server
-     *
      * @param args command line arguments. args[0]=host name, args[1]=service name
      */
     public static void main(String[] args) {

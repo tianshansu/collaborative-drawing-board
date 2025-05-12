@@ -100,7 +100,6 @@ public class ServerUI extends WhiteBoardUIBasic {
         userTable.setBackground(Color.WHITE);
         userTable.getTableHeader().setBackground(Color.WHITE);
 
-        //refreshUsers();
         userTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

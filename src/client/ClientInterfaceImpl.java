@@ -63,8 +63,7 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
      * @throws RemoteException RemoteException
      */
     public void updateCanvas(List<ShapesDrawn> shapesDrawnList) throws RemoteException {
-        ui.updateCanvas(shapesDrawnList);
-
+        SwingUtilities.invokeLater(() -> ui.updateCanvas(shapesDrawnList));
     }
 
     /**
@@ -75,7 +74,7 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
      */
     @Override
     public void updateChatMsg(String username, String chatMsg) throws RemoteException {
-        ui.addNewChatMsg(username, chatMsg);
+        SwingUtilities.invokeLater(() -> ui.addNewChatMsg(username, chatMsg));
     }
 
     /**

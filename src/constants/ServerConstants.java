@@ -21,6 +21,7 @@ public class ServerConstants {
     public static final String INPUT_DIALOG_SAVE_AS_TITLE = "Save Canvas As Image";
     public static final String FILE_ALREADY_EXISTS_TITLE = "File Already Exists";
     public static final String FILE_ALREADY_EXISTS_MSG="File already exists. Do you want to overwrite it?";
-
+    public static final String JOIN_REQUEST_MSG=" wants to join the whiteboard. Allow?";
+    public static final String JOIN_REQUEST_TITLE="A New User Wants to Join";
 
 }

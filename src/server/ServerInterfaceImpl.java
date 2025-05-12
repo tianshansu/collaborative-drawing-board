@@ -4,22 +4,21 @@ import common.ShapesDrawn;
 import common.interfaces.ClientInterface;
 import common.interfaces.ServerInterface;
 import constants.ServerConstants;
+import enums.JoinResult;
+
 import javax.swing.*;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerInterface {
     ServerUI serverUI;
     String username;
-    private final List<String> currentUsernames=new ArrayList<>();
-    private final Map<String, ClientInterface> connectedClients = new HashMap<>();
-    private List<ShapesDrawn> shapesDrawnList = new ArrayList<>(); //store all shapes on canvas
+    private final List<String> currentUsernames = Collections.synchronizedList(new ArrayList<>());
+    private final Map<String, ClientInterface> connectedClients = Collections.synchronizedMap(new HashMap<>());
+    final List<ShapesDrawn> shapesDrawnList = Collections.synchronizedList(new ArrayList<>()); //store all shapes on canvas
 
 
     /**
@@ -44,8 +43,10 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
     @Override
     public void registerClient(String username, ClientInterface client) throws RemoteException {
         //add the new client's name and ref to the map and list
-        connectedClients.put(username,client);
-        currentUsernames.add(username);
+        synchronized (this) {
+            connectedClients.put(username, client);
+            currentUsernames.add(username);
+        }
         updateUserListForAllUsers();
         connectedClients.get(username).updateCanvas(shapesDrawnList);//update the new client's canvas
     }
@@ -57,14 +58,20 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
      * @throws RemoteException RemoteException
      */
     @Override
-    public boolean requestJoin(String username) throws RemoteException {
+    public JoinResult requestJoin(String username) throws RemoteException {
+        synchronized (currentUsernames) {
+            if (currentUsernames.contains(username)) {
+                return JoinResult.NAME_TAKEN;
+            }
+        }
+
         final int[] allowJoin = new int[1];
         try {
             SwingUtilities.invokeAndWait(() ->
                     allowJoin[0] = JOptionPane.showConfirmDialog(
                             serverUI,
-                            username + " wants to join the whiteboard. Allow?",
-                            "A New User Wants to Join",
+                            username + ServerConstants.JOIN_REQUEST_MSG,
+                            ServerConstants.JOIN_REQUEST_TITLE,
                             JOptionPane.YES_NO_OPTION
                     )
             );
@@ -72,7 +79,11 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         } catch (InterruptedException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-        return allowJoin[0] == JOptionPane.YES_OPTION;
+        if(allowJoin[0] == JOptionPane.YES_OPTION){
+            return JoinResult.SUCCESS;
+        }else {
+            return JoinResult.REJECTED;
+        }
     }
 
     /**
@@ -82,8 +93,10 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
      */
     @Override
     public void userDisconnect(String username) throws RemoteException {
-        currentUsernames.remove(username);
-        connectedClients.remove(username);
+        synchronized (this) {
+            currentUsernames.remove(username);
+            connectedClients.remove(username);
+        }
 
         updateUserListForAllUsers();
 
@@ -96,7 +109,11 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
      */
     @Override
     public void drawNewShape(ShapesDrawn shape) throws RemoteException {
-        shapesDrawnList.add(shape);
+        synchronized (shapesDrawnList) {
+            if (!shapesDrawnList.contains(shape)) {
+                shapesDrawnList.add(shape);
+            }
+        }
         for (ClientInterface client : connectedClients.values()) {
             client.updateCanvas(shapesDrawnList);
         }
@@ -186,12 +203,18 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
     @Override
     public void kickUser(String username) throws RemoteException {
         //remove the connection
-        ClientInterface user = connectedClients.get(username);
-        if(user != null) {
-            userDisconnect(username); //remove the user's username from the list and update ui for everyone
-            serverUI.updateUserList(currentUsernames);
+        ClientInterface user;
+        synchronized (this) {
+            user = connectedClients.get(username);
+            if (user != null) {
+                currentUsernames.remove(username);
+                connectedClients.remove(username);
+            }
+        }
 
-            //kick the user after manager UI has been updated
+        if (user != null) {
+            updateUserListForAllUsers();
+
             new Thread(() -> {
                 try {
                     user.kicked();
@@ -199,7 +222,6 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
                     System.out.println(e.getMessage());
                 }
             }).start();
-
         }
 
     }

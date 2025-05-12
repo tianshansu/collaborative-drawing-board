@@ -2,6 +2,7 @@ package client;
 
 import common.interfaces.ServerInterface;
 import common.WhiteBoardUIBasic;
+import constants.ClientConstants;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,7 +22,7 @@ public class ClientUI extends WhiteBoardUIBasic {
      */
     public ClientUI(ServerInterface server,String username) {
         super();
-        setTitle("Shared Whiteboard - Client");
+        setTitle(ClientConstants.UI_TITLE);
         this.server = server;
 
         //add window listener to listen to the client's operation(when closing the window)

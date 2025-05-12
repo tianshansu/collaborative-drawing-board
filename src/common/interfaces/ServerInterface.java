@@ -1,6 +1,7 @@
 package common.interfaces;
 
 import common.ShapesDrawn;
+import enums.JoinResult;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -23,7 +24,7 @@ public interface ServerInterface extends Remote {
      * @return True if server accepts, False if server declines
      * @throws RemoteException RemoteException
      */
-    boolean requestJoin(String username) throws RemoteException;
+    JoinResult requestJoin(String username) throws RemoteException;
 
     /**
      * Disconnect the user
