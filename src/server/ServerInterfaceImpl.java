@@ -226,6 +226,14 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
 
     }
 
+
+    @Override
+    public void broadcastEditUsers(String username, boolean isEditing) throws RemoteException {
+        for (ClientInterface client : connectedClients.values()) {
+            client.updateEditUsers(username, isEditing);
+        }
+    }
+
     /**
      * Close current whiteboard
      * @throws RemoteException RemoteException

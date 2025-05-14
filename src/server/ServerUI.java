@@ -16,6 +16,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -41,16 +42,26 @@ public class ServerUI extends WhiteBoardUIBasic {
      */
     @Override
     public void updateUserList(List<String> userList) {
+        currentUserList = new ArrayList<>(userList);
+
         String[] columnNames = { "User", "Operation" };
 
-        if (userList == null || userList.isEmpty()) {
+        if (userList.isEmpty()) {
             userTable.setModel(new DefaultTableModel(columnNames, 0));
             return;
         }
 
         String[][] data = new String[userList.size()][2];
         for (int i = 0; i < userList.size(); i++) {
-            data[i][0] = userList.get(i);
+            String username = userList.get(i);
+
+
+            if (activeEditors.contains(username)) {
+                data[i][0] = username + " 🟢"; //add the green emoji after the username if active
+            } else {
+                data[i][0] = username;
+            }
+
             //only show the kick text for ordinary users
             if(i!=0){
                 data[i][1] = "kick";
@@ -139,7 +150,11 @@ public class ServerUI extends WhiteBoardUIBasic {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                closeCurrentBoard();
+                try {
+                    ((ServerInterfaceImpl)server).notifyClientsWhenOffline();
+                } catch (RemoteException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         });
 

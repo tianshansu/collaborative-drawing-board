@@ -48,6 +48,12 @@ public interface ServerInterface extends Remote {
      */
     void sendNewChatMsg(String username, String msg) throws RemoteException;
 
+    /**
+     * kick a user
+     * @param username the username of that user
+     * @throws RemoteException RemoteException
+     */
     void kickUser(String username) throws RemoteException;
 
+    void broadcastEditUsers(String username,boolean isEditing) throws RemoteException;
 }

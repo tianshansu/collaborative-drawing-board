@@ -60,6 +60,7 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
 
     /**
      * Update the client's canvas after the manager draws something
+     *
      * @throws RemoteException RemoteException
      */
     public void updateCanvas(List<ShapesDrawn> shapesDrawnList) throws RemoteException {
@@ -68,8 +69,9 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
 
     /**
      * update client's UI to show new chat msg
+     *
      * @param username username of that msg
-     * @param chatMsg the actual chat msg
+     * @param chatMsg  the actual chat msg
      * @throws RemoteException RemoteException
      */
     @Override
@@ -79,6 +81,7 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
 
     /**
      * This current user being kicked by the manager
+     *
      * @throws RemoteException RemoteException
      */
     @Override
@@ -101,5 +104,9 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
         SwingUtilities.invokeLater(() -> ui.setWhiteboardActive(active));
     }
 
+    @Override
+    public void updateEditUsers(String username, boolean isEditing) throws RemoteException {
+        SwingUtilities.invokeLater(() -> ui.setUserEditing(username, isEditing));
+    }
 }
 

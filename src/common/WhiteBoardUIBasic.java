@@ -10,9 +10,8 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
 
 public class WhiteBoardUIBasic extends JFrame {
 
@@ -32,6 +31,8 @@ public class WhiteBoardUIBasic extends JFrame {
     private JPanel rightPanel;
     protected JPanel userListPanel;
     protected boolean isWhiteboardActive = true; //the users can draw only if the whiteboard is active
+    protected final Set<String> activeEditors = new HashSet<>();
+    protected List<String> currentUserList = new ArrayList<>();
 
     /**
      * Constructor
@@ -298,6 +299,14 @@ public class WhiteBoardUIBasic extends JFrame {
             {
                 addMouseListener(new MouseAdapter() {
                     public void mousePressed(MouseEvent e) {
+                        try {
+                            if (serverInterface != null && !activeEditors.contains(currentUserName)) {
+                                serverInterface.broadcastEditUsers(currentUserName, true); //make current user an active user
+                            }
+                        } catch (RemoteException ex) {
+                            System.out.println(ex.getMessage());
+                        }
+
                         if (!isWhiteboardActive) return; //only can draw if the board is active
                         // free draw
                         if (currentShape == Shape.FREE_DRAW) {
@@ -349,6 +358,14 @@ public class WhiteBoardUIBasic extends JFrame {
 
 
                     public void mouseReleased(MouseEvent e) {
+                        try {
+                            if (serverInterface != null && activeEditors.contains(currentUserName)) {
+                                serverInterface.broadcastEditUsers(currentUserName, false); //remove current user from active user
+                            }
+                        } catch (RemoteException ex) {
+                            System.out.println(ex.getMessage());
+                        }
+
                         if (!isWhiteboardActive) return; //only can draw if the board is active
                         if (currentShape == Shape.FREE_DRAW) {
                             freeDrawPoints.add(e.getPoint());
@@ -380,6 +397,13 @@ public class WhiteBoardUIBasic extends JFrame {
                 addMouseMotionListener(new MouseMotionAdapter() {
                     @Override
                     public void mouseDragged(MouseEvent e) {
+                        try {
+                            if (serverInterface != null && !activeEditors.contains(currentUserName)) {
+                                serverInterface.broadcastEditUsers(currentUserName, true); //make current user an active user
+                            }
+                        } catch (RemoteException ex) {
+                            System.out.println(ex.getMessage());
+                        }
                         if (!isWhiteboardActive) return; //only can draw if the board is active
                         if (currentShape == Shape.FREE_DRAW) {
                             freeDrawPoints.add(e.getPoint());
@@ -387,6 +411,8 @@ public class WhiteBoardUIBasic extends JFrame {
                         }
                     }
                 });
+
+
             }
 
             @Override
@@ -554,6 +580,15 @@ public class WhiteBoardUIBasic extends JFrame {
                 new LineBorder(borderColor), title
         );
         return border;
+    }
+
+    public void setUserEditing(String username, boolean isEditing) {
+        if (isEditing) {
+            activeEditors.add(username);
+        } else {
+            activeEditors.remove(username);
+        }
+        updateUserList(currentUserList);
     }
 }
 

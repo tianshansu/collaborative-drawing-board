@@ -9,6 +9,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ClientUI extends WhiteBoardUIBasic {
@@ -46,9 +47,14 @@ public class ClientUI extends WhiteBoardUIBasic {
      */
     @Override
     public void updateUserList(List<String> userList) {
+        currentUserList = new ArrayList<>(userList);
         userListModel.clear();
         for (String name : userList) {
-            userListModel.addElement(name);
+            if (activeEditors.contains(name)) {
+                userListModel.addElement(name + " 🟢");
+            } else {
+                userListModel.addElement(name);
+            }
         }
     }
 

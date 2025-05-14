@@ -38,4 +38,6 @@ public interface ClientInterface extends Remote {
     void kicked() throws RemoteException;
 
     void setWhiteboardActive(boolean active) throws RemoteException;
+
+    void updateEditUsers(String username, boolean isEditing) throws RemoteException;
 }
