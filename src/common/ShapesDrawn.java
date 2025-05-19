@@ -1,3 +1,7 @@
+/**
+ * Name: Tianshan Su
+ * Student ID: 875734
+ */
 package common;
 
 import enums.Shape;
@@ -8,6 +12,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A serializable class, encapsulates the graphical elements drawn on the board
+ */
 public class ShapesDrawn implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -22,10 +29,12 @@ public class ShapesDrawn implements Serializable {
     private final Font font;
 
     /**
-     * Constructor1: draw regular shapes
-     * @param shape the shape
+     * Shapes drawn
+     * @param shape shape
      * @param startPt startPt
      * @param endPt endPt
+     * @param color colour
+     * @param penSize penSize
      */
     public ShapesDrawn(Shape shape, Point startPt, Point endPt,Color color, int penSize) {
         this.shape = shape;
@@ -63,6 +72,7 @@ public class ShapesDrawn implements Serializable {
      * @param startPt text location
      * @param color colour
      * @param text actual text
+     * @param font font
      */
     public ShapesDrawn(Shape shape, Point startPt, Color color, String text,Font font) {
         this.shape = shape;

@@ -1,3 +1,7 @@
+/**
+ * Name: Tianshan Su
+ * Student ID: 875734
+ */
 package common.interfaces;
 
 import common.ShapesDrawn;
@@ -5,8 +9,10 @@ import enums.JoinResult;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.sql.Time;
 
+/**
+ * ServerInterface, extends Remote,the remote methods that the server exposes to clients
+ */
 public interface ServerInterface extends Remote {
 
     /**
@@ -55,5 +61,11 @@ public interface ServerInterface extends Remote {
      */
     void kickUser(String username) throws RemoteException;
 
+    /**
+     * broadcast the editing status of a user to all users
+     * @param username username of that user
+     * @param isEditing true if is editing
+     * @throws RemoteException RemoteException
+     */
     void broadcastEditUsers(String username,boolean isEditing) throws RemoteException;
 }

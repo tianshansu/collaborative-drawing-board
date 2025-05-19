@@ -1,3 +1,7 @@
+/**
+ * Name: Tianshan Su
+ * Student ID: 875734
+ */
 package server;
 
 import common.ShapesDrawn;
@@ -13,17 +17,19 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
+/**
+ * ServerInterfaceImpl class, implements ServerInterface, remote methods of the server
+ */
 public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerInterface {
-    ServerUI serverUI;
-    String username;
+    private ServerUI serverUI;
+    private String username;
     private final List<String> currentUsernames = Collections.synchronizedList(new ArrayList<>());
     private final Map<String, ClientInterface> connectedClients = Collections.synchronizedMap(new HashMap<>());
     final List<ShapesDrawn> shapesDrawnList = Collections.synchronizedList(new ArrayList<>()); //store all shapes on canvas
-
+    private boolean isWhiteboardClosed = false;
 
     /**
      * Constructor
-     * @param serverUI serverUI
      * @throws RemoteException RemoteException
      */
     protected ServerInterfaceImpl(ServerUI serverUI,String username) throws RemoteException {
@@ -33,6 +39,7 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         serverUI.setServer(this);
         serverUI.setCurrentUserName(username);
     }
+
 
     /**
      * Register the new client in server for future remote function invocation
@@ -49,6 +56,7 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
         }
         updateUserListForAllUsers();
         connectedClients.get(username).updateCanvas(shapesDrawnList);//update the new client's canvas
+        connectedClients.get(username).setWhiteboardActive(!isWhiteboardClosed);
     }
 
     /**
@@ -177,7 +185,9 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
             shapesDrawnList.clear();
             shapesDrawnList.addAll(loadedList);//add the contents in the current list
             //display the new canvas in all client UIs
+            isWhiteboardClosed = false;
             for (ClientInterface client : connectedClients.values()) {
+                client.setWhiteboardActive(true);
                 client.updateCanvas(shapesDrawnList);
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -227,6 +237,12 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
     }
 
 
+    /**
+     * broadcast the editing status of a user to all users
+     * @param username username of that user
+     * @param isEditing true if is editing
+     * @throws RemoteException RemoteException
+     */
     @Override
     public void broadcastEditUsers(String username, boolean isEditing) throws RemoteException {
         for (ClientInterface client : connectedClients.values()) {
@@ -240,6 +256,7 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
      */
     public void closeBoard() throws RemoteException {
         shapesDrawnList.clear();
+        isWhiteboardClosed = true;
         for (ClientInterface client : connectedClients.values()) {
             client.setWhiteboardActive(false);
             client.updateCanvas(shapesDrawnList);
@@ -251,6 +268,7 @@ public class ServerInterfaceImpl extends UnicastRemoteObject implements ServerIn
      * @throws RemoteException RemoteException
      */
     public void newBoard() throws RemoteException {
+        isWhiteboardClosed = false;
         for (ClientInterface client : connectedClients.values()) {
             client.setWhiteboardActive(true);
             client.updateCanvas(shapesDrawnList);

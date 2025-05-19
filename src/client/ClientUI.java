@@ -1,3 +1,7 @@
+/**
+ * Name: Tianshan Su
+ * Student ID: 875734
+ */
 package client;
 
 import common.interfaces.ServerInterface;
@@ -12,6 +16,9 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The client UI, extends WhiteBoardUIBasic
+ */
 public class ClientUI extends WhiteBoardUIBasic {
     ServerInterface server;
     private DefaultListModel<String> userListModel;
@@ -23,6 +30,7 @@ public class ClientUI extends WhiteBoardUIBasic {
      */
     public ClientUI(ServerInterface server,String username) {
         super();
+        this.setVisible(true);
         setTitle(ClientConstants.UI_TITLE);
         this.server = server;
 
@@ -51,13 +59,21 @@ public class ClientUI extends WhiteBoardUIBasic {
         userListModel.clear();
         for (String name : userList) {
             if (activeEditors.contains(name)) {
-                userListModel.addElement(name + " 🟢");
+                if(isWhiteboardActive){
+                    userListModel.addElement(name + " ●"); //only show this dot when the board i active
+                }else{
+                    userListModel.addElement(name);
+                }
+
             } else {
                 userListModel.addElement(name);
             }
         }
     }
 
+    /**
+     * generate and add the user list panel
+     */
     @Override
     protected void addUserListPanel(){
         super.addUserListPanel();

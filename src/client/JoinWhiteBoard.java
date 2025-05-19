@@ -1,3 +1,7 @@
+/**
+ * Name: Tianshan Su
+ * Student ID: 875734
+ */
 package client;
 
 import common.interfaces.ServerInterface;
@@ -11,8 +15,12 @@ import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.UnknownHostException;
 import java.util.Locale;
 
+/**
+ * Ordinary user's entry point - join a whiteboard
+ */
 public class JoinWhiteBoard {
 
     /**
@@ -67,6 +75,8 @@ public class JoinWhiteBoard {
             }
         } catch (NotBoundException e) {
             UIUtils.exitWithMsg(null, ClientConstants.NO_MANAGER_FOUND);
+        } catch (UnknownHostException e){
+            UIUtils.exitWithMsg(null, MessageConstants.UNKNOWN_HOST);
         } catch (MalformedURLException | RemoteException e) {
             UIUtils.exitWithMsg(null, ClientConstants.UNABLE_TO_CONNECT);
         }

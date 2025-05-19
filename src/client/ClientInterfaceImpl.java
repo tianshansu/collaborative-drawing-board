@@ -1,3 +1,7 @@
+/**
+ * Name: Tianshan Su
+ * Student ID: 875734
+ */
 package client;
 
 import common.ShapesDrawn;
@@ -13,14 +17,17 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 
+/**
+ * ClientInterfaceImpl class, implements ClientInterface, handling callbacks from the server
+ */
 public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientInterface {
     String username;
     WhiteBoardUIBasic ui;
 
     /**
      * Constructor
-     *
-     * @param ui ui
+     * @param ui UI
+     * @param username username
      * @throws RemoteException RemoteException
      */
     public ClientInterfaceImpl(WhiteBoardUIBasic ui, String username) throws RemoteException {
@@ -81,7 +88,6 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
 
     /**
      * This current user being kicked by the manager
-     *
      * @throws RemoteException RemoteException
      */
     @Override
@@ -99,11 +105,22 @@ public class ClientInterfaceImpl extends UnicastRemoteObject implements ClientIn
         });
     }
 
+    /**
+     * Set whether the current whiteboard is active
+     * @param active true if active
+     * @throws RemoteException RemoteException
+     */
     @Override
     public void setWhiteboardActive(boolean active) throws RemoteException {
         SwingUtilities.invokeLater(() -> ui.setWhiteboardActive(active));
     }
 
+    /**
+     * Update the user's editing status
+     * @param username username of the user
+     * @param isEditing true if is editing
+     * @throws RemoteException RemoteException
+     */
     @Override
     public void updateEditUsers(String username, boolean isEditing) throws RemoteException {
         SwingUtilities.invokeLater(() -> ui.setUserEditing(username, isEditing));

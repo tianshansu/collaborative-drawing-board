@@ -1,3 +1,7 @@
+/**
+ * Name: Tianshan Su
+ * Student ID: 875734
+ */
 package common;
 
 import common.interfaces.ServerInterface;
@@ -13,6 +17,9 @@ import java.rmi.RemoteException;
 import java.util.*;
 import java.util.List;
 
+/**
+ * UI base class, main drawing and interaction logics
+ */
 public class WhiteBoardUIBasic extends JFrame {
 
     private Point startPt;
@@ -29,9 +36,28 @@ public class WhiteBoardUIBasic extends JFrame {
     private JPanel msgPanel;
     private String currentUserName;
     private JPanel rightPanel;
+    private static JButton currentSelectedButton = null; //the shape that is currently selected
+    private boolean isEraserMode = false;
+    private JTextField activeTextField = null;
+
+    /**
+     * the user list jpanel
+     */
     protected JPanel userListPanel;
+
+    /**
+     * true if the whiteboard is active
+     */
     protected boolean isWhiteboardActive = true; //the users can draw only if the whiteboard is active
+
+    /**
+     * the set of current active editors
+     */
     protected final Set<String> activeEditors = new HashSet<>();
+
+    /**
+     * the list of all users in the session
+     */
     protected List<String> currentUserList = new ArrayList<>();
 
     /**
@@ -46,7 +72,7 @@ public class WhiteBoardUIBasic extends JFrame {
         initialiseRightPanel();
         //initialise the main panel (top toolbar + drawing canvas)
         initialiseMainPanel();
-        setVisible(true);
+        setVisible(false);
     }
 
     /**
@@ -103,6 +129,11 @@ public class WhiteBoardUIBasic extends JFrame {
         repaint();
     }
 
+    /**
+     * Add a new chat msg in chat panel
+     * @param username username of that user
+     * @param chatMsg the msg
+     */
     public void addNewChatMsg(String username, String chatMsg) {
         JLabel msgLabel = new JLabel( "<html><body style='width:220px;'>" + chatMsg + "</body></html>");//auto change line
         msgLabel.setFont(new Font("Arial", Font.PLAIN, 20));
@@ -127,6 +158,45 @@ public class WhiteBoardUIBasic extends JFrame {
 
     }
 
+    /**
+     * set whether a user is editing
+     * @param username username of that user
+     * @param isEditing true if is editing
+     */
+    public void setUserEditing(String username, boolean isEditing) {
+        if (isEditing) {
+            activeEditors.add(username);
+        } else {
+            activeEditors.remove(username);
+        }
+        updateUserList(currentUserList);
+    }
+
+    /**
+     * add the user list panel
+     */
+    protected void addUserListPanel() {
+        //user list panel
+        userListPanel = new JPanel();
+        userListPanel.setBackground(Color.WHITE);
+        userListPanel.setPreferredSize(new Dimension(300, 200));
+        userListPanel.setBorder(createBorderWithTitle(Color.BLACK,"User List"));
+        rightPanel.add(userListPanel);
+    }
+
+    /**
+     * create the boarder
+     * @param borderColor colour of the border
+     * @param title title
+     * @return TitledBorder
+     */
+    protected TitledBorder createBorderWithTitle(Color borderColor,String title) {
+        TitledBorder border = BorderFactory.createTitledBorder(
+                new LineBorder(borderColor), title
+        );
+        return border;
+    }
+
     private static JButton createIconButton(String resourcePath) {
         ImageIcon img = new ImageIcon(Objects.requireNonNull(WhiteBoardUIBasic.class.getResource(resourcePath)));
         JButton button = new JButton(img);
@@ -145,7 +215,10 @@ public class WhiteBoardUIBasic extends JFrame {
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent evt) {
-                button.setContentAreaFilled(false);
+                if (button != currentSelectedButton) {
+                    button.setContentAreaFilled(false);
+                    button.setOpaque(false);
+                }
             }
         });
         return button;
@@ -208,6 +281,8 @@ public class WhiteBoardUIBasic extends JFrame {
         lineButton.addActionListener(e -> {
             currentShape = Shape.LINE;
             currentColor = colourBeforeEraser; //change the colour back to the previous colour
+            highlightSelectedButton(lineButton);
+            isEraserMode = false;
         });
         topToolPanel.add(lineButton);
 
@@ -216,6 +291,8 @@ public class WhiteBoardUIBasic extends JFrame {
         triangleButton.addActionListener(e -> {
             currentShape = Shape.TRIANGLE;
             currentColor = colourBeforeEraser;
+            highlightSelectedButton(triangleButton);
+            isEraserMode = false;
         });
         topToolPanel.add(triangleButton);
 
@@ -224,6 +301,8 @@ public class WhiteBoardUIBasic extends JFrame {
         ovalButton.addActionListener(e -> {
             currentShape = Shape.OVAL;
             currentColor = colourBeforeEraser;
+            highlightSelectedButton(ovalButton);
+            isEraserMode = false;
         });
         topToolPanel.add(ovalButton);
 
@@ -232,6 +311,8 @@ public class WhiteBoardUIBasic extends JFrame {
         rectButton.addActionListener(e -> {
             currentShape = Shape.RECTANGLE;
             currentColor = colourBeforeEraser;
+            highlightSelectedButton(rectButton);
+            isEraserMode = false;
         });
         topToolPanel.add(rectButton);
 
@@ -240,6 +321,8 @@ public class WhiteBoardUIBasic extends JFrame {
         freeDrawButton.addActionListener(e -> {
             currentShape = Shape.FREE_DRAW;
             currentColor = colourBeforeEraser;
+            highlightSelectedButton(freeDrawButton);
+            isEraserMode = false;
         });
         topToolPanel.add(freeDrawButton);
 
@@ -248,6 +331,8 @@ public class WhiteBoardUIBasic extends JFrame {
         textButton.addActionListener(e -> {
             currentShape = Shape.TEXT;
             currentColor = colourBeforeEraser;
+            highlightSelectedButton(textButton);
+            isEraserMode = false;
         });
         topToolPanel.add(textButton);
 
@@ -256,6 +341,8 @@ public class WhiteBoardUIBasic extends JFrame {
         eraserButton.addActionListener(e -> {
             currentShape = Shape.FREE_DRAW;
             currentColor = Color.WHITE;
+            isEraserMode=true;
+            highlightSelectedButton(eraserButton);
         });
         topToolPanel.add(eraserButton);
 
@@ -266,10 +353,16 @@ public class WhiteBoardUIBasic extends JFrame {
         colourButton.setOpaque(true);
         colourButton.setBorderPainted(false);
         colourButton.addActionListener(e -> {
-            currentColor = JColorChooser.showDialog(null, "Choose a color", currentColor);
-            colourBeforeEraser = currentColor;
-            colourButton.setBackground(currentColor);
+            Color newColor = JColorChooser.showDialog(this, "Choose a color", colourBeforeEraser);
+            if (newColor != null) {
+                colourBeforeEraser = newColor;
+                if (!isEraserMode) {
+                    currentColor = newColor;
+                }
+                colourButton.setBackground(newColor);
+            }
         });
+
         topToolPanel.add(colourButton);
 
         // pen size
@@ -328,6 +421,8 @@ public class WhiteBoardUIBasic extends JFrame {
                             textField.setFont(currentFont);
                             textField.setForeground(currentColor); //set text colour
 
+                            activeTextField = textField; //set the current textfield
+
                             textField.addFocusListener(new FocusAdapter() {
                                 //remove the text field once the user clicks somewhere else
                                 @Override
@@ -342,12 +437,14 @@ public class WhiteBoardUIBasic extends JFrame {
                                         throw new RuntimeException(ex);
                                     }
                                     drawingPanel.remove(textField);
+                                    activeTextField = null;
 
                                     drawingPanel.revalidate();
                                     drawingPanel.repaint();
                                 }
                             });
                             drawingPanel.add(textField);
+                            textField.requestFocusInWindow();
                             drawingPanel.revalidate();
                             drawingPanel.repaint();
                         }
@@ -566,30 +663,19 @@ public class WhiteBoardUIBasic extends JFrame {
 
     }
 
-    protected void addUserListPanel() {
-        //user list panel
-        userListPanel = new JPanel();
-        userListPanel.setBackground(Color.WHITE);
-        userListPanel.setPreferredSize(new Dimension(300, 200));
-        userListPanel.setBorder(createBorderWithTitle(Color.BLACK,"User List"));
-        rightPanel.add(userListPanel);
-    }
-
-    protected TitledBorder createBorderWithTitle(Color borderColor,String title) {
-        TitledBorder border = BorderFactory.createTitledBorder(
-                new LineBorder(borderColor), title
-        );
-        return border;
-    }
-
-    public void setUserEditing(String username, boolean isEditing) {
-        if (isEditing) {
-            activeEditors.add(username);
-        } else {
-            activeEditors.remove(username);
+    private void highlightSelectedButton(JButton selectedButton) {
+        if (currentSelectedButton != null) {
+            currentSelectedButton.setContentAreaFilled(false);
+            //currentSelectedButton.setBackground(null);
+            currentSelectedButton.setOpaque(false);
         }
-        updateUserList(currentUserList);
+        selectedButton.setContentAreaFilled(true);
+        selectedButton.setBackground(new Color(230, 230, 230));
+        selectedButton.setOpaque(true);
+
+        currentSelectedButton = selectedButton;
     }
+
 }
 
 

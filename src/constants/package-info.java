@@ -1,0 +1,4 @@
+/**
+ * Constants class
+ */
+package constants;

@@ -1,3 +1,7 @@
+/**
+ * Name: Tianshan Su
+ * Student ID: 875734
+ */
 package server;
 
 import common.interfaces.ServerInterface;
@@ -19,11 +23,18 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * The server UI, extends WhiteBoardUIBasic
+ */
 public class ServerUI extends WhiteBoardUIBasic {
     private ServerInterface server;
     private JTable userTable;
 
+    /**
+     * set the server(ServerInterface)
+     *
+     * @param server the ServerInterface
+     */
     public void setServer(ServerInterface server) {
         this.server = server;
     }
@@ -33,18 +44,20 @@ public class ServerUI extends WhiteBoardUIBasic {
      */
     public ServerUI() {
         super();
+        this.setVisible(false);
         initialseServerUi();
     }
 
     /**
      * Update the user list panel
+     *
      * @param userList new username list
      */
     @Override
     public void updateUserList(List<String> userList) {
         currentUserList = new ArrayList<>(userList);
 
-        String[] columnNames = { "User", "Operation" };
+        String[] columnNames = {"User", "Operation"};
 
         if (userList.isEmpty()) {
             userTable.setModel(new DefaultTableModel(columnNames, 0));
@@ -57,15 +70,19 @@ public class ServerUI extends WhiteBoardUIBasic {
 
 
             if (activeEditors.contains(username)) {
-                data[i][0] = username + " 🟢"; //add the green emoji after the username if active
+                if (isWhiteboardActive) {
+                    data[i][0] = username + " ●"; //add the green dot after the username if active
+                } else {
+                    data[i][0] = username;
+                }
             } else {
                 data[i][0] = username;
             }
 
             //only show the kick text for ordinary users
-            if(i!=0){
+            if (i != 0) {
                 data[i][1] = "kick";
-            }else {
+            } else {
                 data[i][1] = "";
             }
 
@@ -94,8 +111,11 @@ public class ServerUI extends WhiteBoardUIBasic {
         userTable.repaint();
     }
 
+    /**
+     * add the user list panel
+     */
     @Override
-    protected void addUserListPanel(){
+    protected void addUserListPanel() {
         super.addUserListPanel();
 
         JScrollPane scrollPaneUsers = new JScrollPane((Component) null);
@@ -117,8 +137,8 @@ public class ServerUI extends WhiteBoardUIBasic {
 
 
                 //only do the action if the client clicked operation column
-                if (column == 1&&row!=0) {
-                    String userToRemove = (String)userTable.getValueAt(row, 0); //get the username of that user
+                if (column == 1 && row != 0) {
+                    String userToRemove = (String) userTable.getValueAt(row, 0); //get the username of that user
                     try {
                         server.kickUser(userToRemove);
                     } catch (RemoteException ex) {
@@ -137,7 +157,7 @@ public class ServerUI extends WhiteBoardUIBasic {
 
     private void closeCurrentBoard() {
         try {
-            ((ServerInterfaceImpl)server).closeBoard();
+            ((ServerInterfaceImpl) server).closeBoard();
         } catch (RemoteException e) {
             throw new RuntimeException(e);
         }
@@ -151,7 +171,7 @@ public class ServerUI extends WhiteBoardUIBasic {
             @Override
             public void windowClosing(WindowEvent e) {
                 try {
-                    ((ServerInterfaceImpl)server).notifyClientsWhenOffline();
+                    ((ServerInterfaceImpl) server).notifyClientsWhenOffline();
                 } catch (RemoteException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -179,7 +199,7 @@ public class ServerUI extends WhiteBoardUIBasic {
         JMenuItem openItem = new JMenuItem(ServerConstants.MENU_OPEN);
         openItem.setBackground(Color.WHITE);
         openItem.addActionListener(e -> {
-            openCanvasToFile();
+            openCanvasFromFile();
         });
 
         // save the current canvas
@@ -221,7 +241,7 @@ public class ServerUI extends WhiteBoardUIBasic {
         return filename;
     }
 
-    private void saveAsImg(){
+    private void saveAsImg() {
         //get the size of drawing panel and create the image
         BufferedImage image = new BufferedImage(getDrawingPanel().getWidth(), getDrawingPanel().getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics2D = image.createGraphics();
@@ -234,49 +254,67 @@ public class ServerUI extends WhiteBoardUIBasic {
             dir.mkdirs();
         }
         String filename = showInputDialog(ServerConstants.INPUT_DIALOG_SAVE_AS_MSG, ServerConstants.INPUT_DIALOG_SAVE_AS_TITLE);
-        //check whether the file exists
-        checkFileNameOverwrite(filename,ServerConstants.FILE_ALREADY_EXISTS_MSG,ServerConstants.FILE_ALREADY_EXISTS_TITLE);
-        File file = new File(ServerConstants.CANVAS_SAVE_AS_PATH + filename+".jpg");
-        try {
-            ImageIO.write(image, "jpg", file);
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
+        if (filename == null || filename.trim().isEmpty()) {
+            return;
         }
+        //check whether the file exists
+        boolean overwrite = checkFileNameOverwrite(filename, ServerConstants.FILE_ALREADY_EXISTS_MSG, ServerConstants.FILE_ALREADY_EXISTS_TITLE, ServerConstants.CANVAS_SAVE_AS_PATH, ".jpg");
+        File file = new File(ServerConstants.CANVAS_SAVE_AS_PATH + filename + ".jpg");
+        if (overwrite) {
+            try {
+                ImageIO.write(image, "jpg", file);
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
 
     }
 
     private void saveCanvasToFile() {
         //give the file a name
         String filename = showInputDialog(ServerConstants.INPUT_DIALOG_SAVE_MSG, ServerConstants.INPUT_DIALOG_SAVE_TITLE);
-        //check whether the file exists
-        checkFileNameOverwrite(filename,ServerConstants.FILE_ALREADY_EXISTS_MSG,ServerConstants.FILE_ALREADY_EXISTS_TITLE);
-        //save it to file
-        try {
-            ((ServerInterfaceImpl) server).saveCanvasToFile(filename);
-        } catch (RemoteException ex) {
-            throw new RuntimeException(ex);
+        if (filename == null || filename.trim().isEmpty()) {
+            return;
         }
+        //check whether the file exists
+        boolean overwrite = checkFileNameOverwrite(filename, ServerConstants.FILE_ALREADY_EXISTS_MSG, ServerConstants.FILE_ALREADY_EXISTS_TITLE, ServerConstants.CANVAS_SAVE_PATH, null);
+        if (overwrite) {
+            //save it to file
+            try {
+                ((ServerInterfaceImpl) server).saveCanvasToFile(filename);
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
     }
 
-    private void openCanvasToFile() {
+    private void openCanvasFromFile() {
         //give the file a name
         String filename = showInputDialog(ServerConstants.INPUT_DIALOG_OPEN_MSG, ServerConstants.INPUT_DIALOG_OPEN_TITLE);
         //check whether the file exists
-        checkFileNameExists(filename,ServerConstants.FILE_NOT_EXIST_MSG,ServerConstants.ERROR);
+        boolean fileExists= checkFileNameExists(filename, ServerConstants.FILE_NOT_EXIST_MSG, ServerConstants.ERROR);
+
+        if (!fileExists) {
+            return; // return if file doesn't exist
+        }
 
         //load the list from file
         try {
+            ((ServerInterfaceImpl) server).newBoard(); //set the board back to active
             ((ServerInterfaceImpl) server).loadCanvasFromFile(filename);
         } catch (RemoteException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    private void checkFileNameOverwrite(String filename, String msg, String title) {
+    private boolean checkFileNameOverwrite(String filename, String msg, String title, String filePath, String suffix) {
+        if (suffix == null) suffix = "";
         //check this filename exists
-        File file = new File(ServerConstants.CANVAS_SAVE_PATH + filename);
+        File file = new File(filePath + filename + suffix);
         //if yes, ask the user if they want to overwrite
-        if (file.exists()) {
+        if (file.exists() && file.isFile()) {
             int choice = JOptionPane.showConfirmDialog(
                     this,
                     msg,
@@ -284,17 +322,20 @@ public class ServerUI extends WhiteBoardUIBasic {
                     JOptionPane.YES_NO_OPTION
             );
             if (choice == JOptionPane.NO_OPTION) {
-                return;
+                return false;
             }
         }
+        return true;
     }
 
-    private void checkFileNameExists(String filename, String msg, String title) {
+    private boolean checkFileNameExists(String filename, String msg, String title) {
         //check this filename exists
         File file = new File(ServerConstants.CANVAS_SAVE_PATH + filename);
         //if yes, ask the user if they want to overwrite
         if (!file.exists()) {
             JOptionPane.showMessageDialog(this, msg, title, JOptionPane.ERROR_MESSAGE);
+            return false;
         }
+        return true;
     }
 }

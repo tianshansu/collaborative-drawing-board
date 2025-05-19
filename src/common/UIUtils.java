@@ -1,9 +1,16 @@
+/**
+ * Name: Tianshan Su
+ * Student ID: 875734
+ */
 package common;
 
 import constants.MessageConstants;
 
 import javax.swing.*;
 
+/**
+ * Utils class
+ */
 public class UIUtils {
 
     /**

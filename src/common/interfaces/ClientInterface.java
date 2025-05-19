@@ -1,3 +1,7 @@
+/**
+ * Name: Tianshan Su
+ * Student ID: 875734
+ */
 package common.interfaces;
 
 import common.ShapesDrawn;
@@ -6,6 +10,9 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 
+/**
+ * ClientInterface, extends Remote, the remote methods that can be invoked by the server
+ */
 public interface ClientInterface extends Remote {
 
     /**
@@ -23,6 +30,7 @@ public interface ClientInterface extends Remote {
 
     /**
      * Update the client's canvas after the manager draws something
+     * @param shapesDrawnList the list of the shapes drawn
      * @throws RemoteException RemoteException
      */
     void updateCanvas(List<ShapesDrawn> shapesDrawnList) throws RemoteException;
@@ -35,9 +43,24 @@ public interface ClientInterface extends Remote {
      */
     void updateChatMsg(String username,String chatMsg) throws RemoteException;
 
+    /**
+     * This current user being kicked by the manager
+     * @throws RemoteException RemoteException
+     */
     void kicked() throws RemoteException;
 
+    /**
+     * Set whether the current whiteboard is active
+     * @param active true if active
+     * @throws RemoteException RemoteException
+     */
     void setWhiteboardActive(boolean active) throws RemoteException;
 
+    /**
+     * Update the user's editing status
+     * @param username username of the user
+     * @param isEditing true if is editing
+     * @throws RemoteException RemoteException
+     */
     void updateEditUsers(String username, boolean isEditing) throws RemoteException;
 }
