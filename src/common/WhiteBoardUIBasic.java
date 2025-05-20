@@ -393,7 +393,7 @@ public class WhiteBoardUIBasic extends JFrame {
                 addMouseListener(new MouseAdapter() {
                     public void mousePressed(MouseEvent e) {
                         try {
-                            if (serverInterface != null && !activeEditors.contains(currentUserName)) {
+                            if (currentShape != null &&  serverInterface != null && !activeEditors.contains(currentUserName)) {
                                 serverInterface.broadcastEditUsers(currentUserName, true); //make current user an active user
                             }
                         } catch (RemoteException ex) {
@@ -495,7 +495,7 @@ public class WhiteBoardUIBasic extends JFrame {
                     @Override
                     public void mouseDragged(MouseEvent e) {
                         try {
-                            if (serverInterface != null && !activeEditors.contains(currentUserName)) {
+                            if (currentShape != null && serverInterface != null && !activeEditors.contains(currentUserName)) {
                                 serverInterface.broadcastEditUsers(currentUserName, true); //make current user an active user
                             }
                         } catch (RemoteException ex) {
