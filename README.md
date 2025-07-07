@@ -1,12 +1,9 @@
 # Distributed Shared Whiteboard
-
 A real-time collaborative whiteboard system developed using Java RMI, allowing multiple users to draw, type, and interact on a shared canvas from different machines.  
 Users can draw shapes, input text, chat in real time, and manage access — making it ideal for remote collaboration, teaching, or brainstorming.
 
----
 
 ## Features
-
 ### Basic
 - Multi-user whiteboard shared over a network
 - Real-time drawing of lines, rectangles, ovals, triangles
@@ -23,7 +20,6 @@ Users can draw shapes, input text, chat in real time, and manage access — maki
 - Automatic synchronization of whiteboard state for new joiners
 - When a user is drawing, a colored dot appears next to their name in the user list
 
----
 
 ## Technologies Used
 
@@ -31,8 +27,6 @@ Users can draw shapes, input text, chat in real time, and manage access — maki
 - Java Swing (GUI components)
 - Multi-threading for concurrent operations
 - Custom protocol for state synchronization and user management
-
----
 
 ### Start as Manager
 java -jar CreateWhiteBoard.jar &lt;serverIP&gt; &lt;port&gt; &lt;username&gt;
